@@ -40,6 +40,7 @@ project.xcworkspace
 .settings
 local.properties
 android.iml
+android/build
 
 # Cocoapods
 #
@@ -84,3 +85,5 @@ android/generated
 
 # React Native Nitro Modules
 nitrogen/
+
+*.tgz

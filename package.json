@@ -1,6 +1,6 @@
 {
   "name": "react-native-financial-charts",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A high-performance financial visual chart for React Native built with Skia.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -66,8 +66,11 @@
     "@react-native/babel-preset": "0.83.0",
     "@react-native/eslint-config": "0.83.0",
     "@release-it/conventional-changelog": "^10.0.1",
+    "@shopify/react-native-skia": "^2.4.7",
+    "@types/d3": "^7",
     "@types/jest": "^29.5.14",
-    "@types/react": "^19.1.12",
+    "@types/react": "^19.2.7",
+    "@types/react-native": "^0.73.0",
     "commitlint": "^19.8.1",
     "del-cli": "^6.0.0",
     "eslint": "^9.35.0",
@@ -79,12 +82,17 @@
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-builder-bob": "^0.40.17",
+    "react-native-gesture-handler": "^2.29.1",
+    "react-native-reanimated": "^4.2.1",
     "release-it": "^19.0.4",
     "typescript": "^5.9.2"
   },
   "peerDependencies": {
+    "@shopify/react-native-skia": "^2.2.18",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-gesture-handler": ">=2.0.0",
+    "react-native-reanimated": ">=4.0.0"
   },
   "workspaces": [
     "example"
@@ -156,5 +164,8 @@
       "release-it"
     ],
     "version": "0.56.0"
+  },
+  "dependencies": {
+    "d3": "^7.9.0"
   }
 }
