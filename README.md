@@ -233,11 +233,11 @@ The interactive cursor that follows the finger.
 
 Displays the current interpolated value (price, score, etc).
 
-| Prop             | Type                        | Default   | Description             |
-| ---------------- | --------------------------- | --------- | ----------------------- |
-| `format`         | `(value: number) => string` | `R$ 0,00` | Format function         |
-| `style`          | `TextStyle`                 | `{}`      | Inner text style        |
-| `containerStyle` | `ViewStyle`                 | `{}`      | Tooltip container style |
+| Prop             | Type                        | Default  | Description             |
+| ---------------- | --------------------------- | -------- | ----------------------- |
+| `format`         | `(value: number) => string` | `$ 0.00` | Format function         |
+| `style`          | `TextStyle`                 | `{}`     | Inner text style        |
+| `containerStyle` | `ViewStyle`                 | `{}`     | Tooltip container style |
 
 ### `<Chart.Tooltip.Date />`
 
@@ -299,6 +299,10 @@ plugins: ['react-native-reanimated/plugin'],
 3. Commit your changes (`git commit -m 'Add some NewFeature'`)
 4. Push to the Branch (`git push origin feature/NewFeature`)
 5. Open a Pull Request
+
+---
+
+This library was inspired by the awesome [react-native-wagmi-charts](https://github.com/coinjar/react-native-wagmi-charts). Ideally, I aimed to create a performant Skia-based alternative with a similar easy-to-use API.
 
 ## 📄 License
 

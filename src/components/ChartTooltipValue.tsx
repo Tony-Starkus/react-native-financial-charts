@@ -58,7 +58,7 @@ const ChartTooltipPrice: React.FC<IProps> = ({
   // This is a special Reanimated feature for TextInput/Text inputs.
   const textProps = useAnimatedProps(() => {
     if (format) return { text: format(currentValue.value) };
-    return { text: `R$ ${currentValue.value.toFixed(2).replace('.', ',')}` };
+    return { text: `$ ${currentValue.value.toFixed(2)}` };
   });
 
   return (
