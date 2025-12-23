@@ -1,4 +1,4 @@
-# 📈 React Native Finance Kit
+# 📈 React Native Financial Charts
 
 <p align="center">
   <img src="./docs/assets/0.gif" alt="Interactive Line" />
