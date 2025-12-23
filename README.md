@@ -20,7 +20,7 @@ Designed to render animations at **60/120 FPS** on the UI thread, with absolute 
 Since this library relies on powerful native modules, you must install the **Peer Dependencies**:
 
 ```bash
-yarn add react-native-finance-kit
+yarn add react-native-financial-charts
 
 # Install required dependencies
 yarn add @shopify/react-native-skia react-native-reanimated react-native-gesture-handler d3
@@ -35,7 +35,7 @@ yarn add @shopify/react-native-skia react-native-reanimated react-native-gesture
 ```tsx
 import React from 'react';
 import { View } from 'react-native';
-import { Chart } from 'react-native-finance-kit';
+import { Chart } from 'react-native-financial-charts';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const data = [
