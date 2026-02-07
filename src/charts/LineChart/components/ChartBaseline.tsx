@@ -1,5 +1,5 @@
 import { useDerivedValue, withSpring } from 'react-native-reanimated';
-import { useChart } from '../ChartContext';
+import { useChart } from '../LineChartContext';
 import { useMemo } from 'react';
 import {
   Circle,

@@ -1,5 +1,5 @@
 import { LinearGradient, Path, vec } from '@shopify/react-native-skia';
-import { useChart } from '../ChartContext';
+import { useChart } from '../LineChartContext';
 
 export interface IProps {
   gradientColors?: string[];

@@ -1,0 +1,2 @@
+export const BAR_CHART_PADDING_LEFT = 12;
+export const BAR_CHART_PADDING_RIGHT = 12;

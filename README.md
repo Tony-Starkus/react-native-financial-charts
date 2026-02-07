@@ -1,7 +1,8 @@
 # 📈 React Native Financial Charts
 
 <p align="center">
-  <img src="./docs/assets/0.gif" alt="Interactive Line" />
+<img src="./docs/assets/0.gif" alt="Interactive Line Chart" width="49%" />
+<img src="./docs/assets/barchart/0.gif" alt="Interactive Bar Chart" width="49%" />
 </p>
 
 A **high-performance** financial charting library for React Native, built on the power of **Skia** and **Reanimated**.
@@ -30,250 +31,114 @@ yarn add @shopify/react-native-skia react-native-reanimated react-native-gesture
 > If you are using Expo Go, ensure that the Skia and Reanimated versions are compatible with your SDK.
 > It's recommended using **Development Builds** (`npx expo run:android`) for the best performance.
 
-## ⚡ Basic Usage
+## 📊 Components
+
+### 1. Bar Chart (New in v2.0)
+
+A high-performance bar chart with virtualization, scrolling, and rich interactivity.
 
 ```tsx
-import React from 'react';
-import { View } from 'react-native';
-import { Chart } from 'react-native-financial-charts';
+import { BarChart } from 'react-native-financial-charts';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+const data: BarChartItemDataInterface[] = [
+  { label: 'Food 123 ABC', value: 1200, color: '#FF6B6B' }, // Red for expenses
+  { label: 'Transport', value: 800, color: '#4ECDC4' }, // Teal
+  { label: 'Invest', value: 3500, color: '#1A535C' }, // Dark Blue for savings
+  { label: 'Invest', value: 3800, color: '#1A535C' }, // Dark Blue for savings
+  { label: 'Rent', value: 2100, color: '#FFE66D' }, // Yellow
+];
+
+const App = () => {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BarChart.Root
+        data={data}
+        width={390}
+        selectable
+        showXAxis
+        scrollToTheEnd
+      >
+        <BarChart.Canvas>
+          <BarChart.Grid />
+          <BarChart.Bar />
+          <BarChart.ToolTip
+            format={(value) => {
+              'worklet';
+              return value.toString();
+            }}
+          />
+          <BarChart.YAxis labelColor="#FFF" labelBackgroundColor="#696969" />
+        </BarChart.Canvas>
+      </BarChart.Root>
+    </GestureHandlerRootView>
+  );
+};
+```
+
+[Read the full BarChart Documentation](./docs/BarChartDocs.md) (Includes API Reference, Scrolling, Y-Axis customization, and more)
+
+<img src="./docs/assets/barchart/0.gif" alt="Interactive Line" />
+
+### 2. Line Chart
+
+The classic interactive line chart for financial data.
+
+[Read the full LineChart Documentation](./docs/LineChartDocs.md) (Includes API Reference, Areas, Baselines, and Advanced Tooltips)
+
+<img src="./docs/assets/0.gif" alt="Interactive Line" />
+
+```tsx
+import { LineChart } from 'react-native-financial-charts';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const data = [
-  { timestamp: 1625945400000, value: 33575.25 },
-  { timestamp: 1625946300000, value: 33545.25 },
-  { timestamp: 1625947200000, value: 33510.25 },
-  { timestamp: 1625948100000, value: 33215.25 },
+  {
+    timestamp: new Date('2025-11-18T10:00:00').getTime(),
+    value: 468500.2,
+  },
+  {
+    timestamp: new Date('2025-11-19T10:00:00').getTime(),
+    value: 471200.5,
+  },
+  {
+    timestamp: new Date('2025-11-20T10:00:00').getTime(),
+    value: 465800.1,
+  },
+  {
+    timestamp: new Date('2025-11-21T10:00:00').getTime(),
+    value: 459900.0,
+  },
+  {
+    timestamp: new Date('2025-11-22T10:00:00').getTime(),
+    value: 462300.75,
+  },
+  {
+    timestamp: new Date('2025-11-23T10:00:00').getTime(),
+    value: 469100.3,
+  },
+  {
+    timestamp: new Date('2025-11-24T10:00:00').getTime(),
+    value: 472569.81,
+  },
 ];
 
-export default function App() {
+const App = () => {
   return (
-    <View
-      style={{ flex: 1, justifyContent: 'center', backgroundColor: '#000' }}
-    >
-      <GestureHandlerRootView style={{ flex: 1, marginTop: 200 }}>
-        <Chart.Root data={data} height={250}>
-          <Chart.Canvas>
-            <Chart.Area />
-            <Chart.Line />
-            <Chart.Cursor />
-          </Chart.Canvas>
-
-          <Chart.Tooltip.Value />
-          <Chart.Tooltip.Date />
-        </Chart.Root>
-      </GestureHandlerRootView>
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <LineChart.Root data={data} width={400}>
+        <LineChart.Canvas>
+          <LineChart.Area />
+          <LineChart.Baseline />
+          <LineChart.Line />
+          <LineChart.Cursor />
+        </LineChart.Canvas>
+        <LineChart.Tooltip.Value />
+        <LineChart.Tooltip.Date />
+      </LineChart.Root>
+    </GestureHandlerRootView>
   );
-}
-```
-
-## 💡 Examples
-
-Here are some common patterns to customize the chart to your needs.
-
-### 1. Custom Colors (The "Bitcoin" Look)
-
-Customize the line color and the area gradient to match specific assets (e.g., Orange for BTC, Blue for ETH).
-
-```tsx
-<Chart.Root data={data}>
-  <Chart.Canvas>
-    <Chart.Area
-      // Gradient from transparent Orange to transparent
-      gradientColors={['#F7931A50', '#F7931A00']}
-    />
-    <Chart.Line
-      colors={['#F7931A']} // Solid Orange
-      strokeWidth={4}
-    />
-    <Chart.Cursor crosshairColor="#F7931A" />
-  </Chart.Canvas>
-</Chart.Root>
-```
-
-![Chart Sample 1](./docs/assets/1.png)
-
-### 2. Minimal Sparkline
-
-A small, simplified chart without tooltips or padding, perfect for lists or crypto tickers.
-
-```tsx
-<Chart.Root
-  data={data}
-  height={60}
-  width={120}
-  padding={0} // Remove padding to touch edges
->
-  <Chart.Canvas>
-    <Chart.Line
-      strokeWidth={2}
-      colors={['#10B981', '#10B981', '#10B981', '#10B981']}
-    />
-  </Chart.Canvas>
-  {/* No Tooltips, no Cursor */}
-</Chart.Root>
-```
-
-![Chart Sample 2](./docs/assets/2.png)
-
-### 3. Custom Currency Formatting (USD/EUR)
-
-Use a Worklet to format values dynamically on the UI thread.
-
-```tsx
-const formatUSD = (value: number) => {
-  'worklet';
-  return `$ ${value.toFixed(2)}`;
 };
-
-const formatEUR = (value: number) => {
-  'worklet';
-  return `€ ${value.toFixed(2).replace('.', ',')}`;
-};
-
-// Usage
-<Chart.Root data={data}>
-  <Chart.Canvas>
-    <Chart.Area />
-    <Chart.Line />
-    <Chart.Cursor />
-  </Chart.Canvas>
-  <Chart.ToolTip.Value format={formatUSD} />
-</Chart.Root>;
-```
-
-![Chart Sample 3](./docs/assets/3.gif)
-
-### 4. Customizing the Tooltip Style
-
-Change the background color and border radius of the floating tooltip.
-
-```tsx
-<Chart.Root data={data}>
-  <Chart.Canvas>
-    <Chart.Area />
-    <Chart.Line />
-    <Chart.Cursor />
-  </Chart.Canvas>
-  <Chart.Tooltip.Value
-    containerStyle={{
-      backgroundColor: 'white',
-      borderRadius: 4,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-    }}
-    style={{
-      color: 'black',
-      fontSize: 14,
-    }}
-  />
-</Chart.Root>
-```
-
-![Chart Sample 4](./docs/assets/4.gif)
-
-## 🛠️ API Reference
-
-### `<Chart.Root />`
-
-The parent component that manages state and calculations.
-
-| Prop             | Type          | Default        | Description                              |
-| ---------------- | ------------- | -------------- | ---------------------------------------- |
-| `data`           | `DataPoint[]` | **Required**   | `{ timestamp: number, value: number }[]` |
-| `height`         | `number`      | `250`          | Total height of the chart                |
-| `width`          | `number`      | `Screen Width` | Total width of the chart                 |
-| `padding`        | `number`      | `20`           | Internal horizontal padding              |
-| `containerStyle` | `ViewStyle`   | `{}`           | Styles for the main container            |
-
-### `<Chart.Canvas />`
-
-The wrapper for all Skia elements.
-
-| Prop       | Type              | Default | Description                             |
-| ---------- | ----------------- | ------- | --------------------------------------- |
-| `children` | `React.ReactNode` | - - -   | Children element. Must be Skia elements |
-
-### `<Chart.Line />`
-
-Draws the main chart line.
-
-| Prop          | Type       | Default                                        | Description                    |
-| ------------- | ---------- | ---------------------------------------------- | ------------------------------ |
-| `strokeWidth` | `number`   | `3`                                            | Line thickness                 |
-| `colors`      | `string[]` | `['#00E396', '#00E396', '#EA3943', '#EA3943']` | Gradient colors (Top → Bottom) |
-
-### `<Chart.Baseline />`
-
-Draws a dashed horizontal line at the starting value (baseline). Useful for visualizing profit/loss.
-
-| Prop        | Type      | Default   | Description                                              |
-| ----------- | --------- | --------- | -------------------------------------------------------- |
-| `color`     | `string`  | `#858CA2` | Color of the dashed line and starting dot.               |
-| `showLabel` | `boolean` | `true`    | Whether to show the label chip with the formatted value. |
-
-### `<Chart.Area />`
-
-Draws the gradient fill below the line.
-
-| Prop             | Type       | Default                            | Description                                                                      |
-| ---------------- | ---------- | ---------------------------------- | -------------------------------------------------------------------------------- |
-| `gradientColors` | `string[]` | `['#000', '#000', '#000', '#000']` | Array of 4 colors for the area gradient (Top -> Baseline -> Baseline -> Bottom). |
-
-### `<Chart.Cursor />`
-
-The interactive cursor that follows the finger.
-
-| Prop             | Type     | Default   | Description                          |
-| ---------------- | -------- | --------- | ------------------------------------ |
-| `crosshairColor` | `string` | `'white'` | Color of the vertical line           |
-| `circleColor`    | `string` | `'white'` | Border color of the indicator circle |
-
-### `<Chart.Tooltip.Value />`
-
-Displays the current interpolated value (price, score, etc).
-
-| Prop             | Type                        | Default  | Description             |
-| ---------------- | --------------------------- | -------- | ----------------------- |
-| `format`         | `(value: number) => string` | `$ 0.00` | Format function         |
-| `style`          | `TextStyle`                 | `{}`     | Inner text style        |
-| `containerStyle` | `ViewStyle`                 | `{}`     | Tooltip container style |
-
-### `<Chart.Tooltip.Date />`
-
-Displays the current date/time.
-
-| Prop             | Type                        | Default      | Description             |
-| ---------------- | --------------------------- | ------------ | ----------------------- |
-| `style`          | `TextStyle`                 | `{}`         | Inner text style        |
-| `containerStyle` | `ViewStyle`                 | `{}`         | Tooltip container style |
-| `format`         | `(value: number) => string` | `DD/MM/YYYY` | Timestamp formatter     |
-
-## 🎨 Advanced Customization
-
-### Formatting Currency (USD)
-
-```ts
-const formatUSD = (value: number) => {
-  'worklet';
-  return `$ ${value.toFixed(2)}`;
-};
-
-<Chart.Tooltip.Value format={formatUSD} />;
-```
-
-### Styling the Container
-
-```tsx
-<Chart.Root
-  data={data}
-  containerStyle={{
-    backgroundColor: '#1E1E2D',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#333',
-  }}
->
 ```
 
 ## 🐛 Troubleshooting

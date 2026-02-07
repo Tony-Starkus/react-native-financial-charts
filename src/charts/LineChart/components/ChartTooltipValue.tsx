@@ -4,14 +4,14 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import { useChart } from '../ChartContext';
+import { useChart } from '../LineChartContext';
 import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import AnimatedTextInput from './AnimatedTextInput';
+import AnimatedTextInput from '../../../components/AnimatedTextInput';
 
 export interface IProps {
   style?: StyleProp<TextStyle>;

@@ -10,7 +10,7 @@ import Animated, { type AnimatedProps } from 'react-native-reanimated';
 Animated.addWhitelistedNativeProps({ text: true });
 
 // 2. Extends the standard props to include 'text'
-interface AnimatedTextInputProps extends TextInputProps {
+export interface AnimatedTextInputProps extends TextInputProps {
   text?: string;
 }
 

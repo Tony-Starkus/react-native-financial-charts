@@ -4,19 +4,19 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import * as d3 from 'd3';
 
-import type { ChartContextValue, DataPoint } from './interfaces';
+import type { LineChartContextValue, LineChartDataPoint } from './interfaces';
 import { Skia } from '@shopify/react-native-skia';
 import { useSharedValue } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { solveCatmullRom } from './utils';
+import { solveCatmullRom } from '../../utils';
 
 const MOCK_SHARED_VAL_NUM = { value: 0 } as SharedValue<number>;
 const MOCK_SHARED_VAL_BOOL = { value: false } as SharedValue<boolean>;
 const EMPTY_PATH = Skia.Path.Make();
 const WINDOW_WIDTH = Dimensions.get('window').width;
 
-const INITIAL_CONTEXT: ChartContextValue = {
+const INITIAL_CONTEXT: LineChartContextValue = {
   originalData: [],
   width: WINDOW_WIDTH,
   height: 250,
@@ -42,17 +42,18 @@ const INITIAL_CONTEXT: ChartContextValue = {
   valueMap: new Float32Array(0),
 };
 
-export const ChartContext = createContext<ChartContextValue>(INITIAL_CONTEXT);
+export const ChartContext =
+  createContext<LineChartContextValue>(INITIAL_CONTEXT);
 
 export interface ChartRootPropsInterface extends PropsWithChildren {
-  data: DataPoint[];
+  data: LineChartDataPoint[];
   width?: number;
   height?: number;
   padding?: number;
   containerStyle?: StyleProp<ViewStyle>;
 }
 
-const ChartProvider: React.FC<ChartRootPropsInterface> = ({
+const LineChartProvider: React.FC<ChartRootPropsInterface> = ({
   data,
   width = Dimensions.get('window').width,
   height = 250,
@@ -308,4 +309,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChartProvider;
+export default LineChartProvider;

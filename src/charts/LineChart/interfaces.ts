@@ -1,12 +1,12 @@
 import * as d3 from 'd3';
 import type { SharedValue } from 'react-native-reanimated';
 
-export type DataPoint = { timestamp: number; value: number };
+export type LineChartDataPoint = { timestamp: number; value: number };
 
 // The Context holds all the calculated values so child components (Line, Cursor) can access them
 // without needing to pass props down through N layers
-export type ChartContextValue = {
-  originalData: DataPoint[];
+export type LineChartContextValue = {
+  originalData: LineChartDataPoint[];
   width: number;
   height: number;
   padding: number;

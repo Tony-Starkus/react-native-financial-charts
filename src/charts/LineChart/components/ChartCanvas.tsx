@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import { ChartContext, useChart } from '../ChartContext';
+import { ChartContext, useChart } from '../LineChartContext';
 import { Canvas } from '@shopify/react-native-skia';
 
 /**
