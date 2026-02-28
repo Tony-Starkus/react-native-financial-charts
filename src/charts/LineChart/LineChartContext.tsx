@@ -53,6 +53,8 @@ export interface ChartRootPropsInterface extends PropsWithChildren {
   containerStyle?: StyleProp<ViewStyle>;
 }
 
+export type LineChartRootPropsInterface = ChartRootPropsInterface;
+
 const LineChartProvider: React.FC<ChartRootPropsInterface> = ({
   data,
   width = Dimensions.get('window').width,

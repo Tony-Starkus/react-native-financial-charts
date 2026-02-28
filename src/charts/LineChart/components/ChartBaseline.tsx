@@ -17,6 +17,8 @@ export interface IProps {
   showLabel?: boolean;
 }
 
+export type LineChartBaselinePropsInterface = IProps;
+
 /**
  * Draws the dotted line at the starting value (profit line)
  */

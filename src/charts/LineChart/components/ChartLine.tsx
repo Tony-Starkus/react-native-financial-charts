@@ -6,6 +6,8 @@ export interface IProps {
   colors?: string[];
 }
 
+export type LineChartLinePropsInterface = IProps;
+
 /**
  * Draws the main trend line.
  */

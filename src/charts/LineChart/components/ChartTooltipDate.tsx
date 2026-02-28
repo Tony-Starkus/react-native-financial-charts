@@ -19,6 +19,8 @@ export interface IProps {
   format?: (value: number) => string;
 }
 
+export type LineChartTooltipDatePropsInterface = IProps;
+
 const ChartTooltipDate: React.FC<IProps> = ({
   style,
   containerStyle,

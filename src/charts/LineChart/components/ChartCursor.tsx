@@ -14,6 +14,8 @@ export interface IProps {
   circleColor?: string;
 }
 
+export type LineChartCursorPropsInterface = IProps;
+
 /**
  * The Crosshair and Highlight Circle
  */

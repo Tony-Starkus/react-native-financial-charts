@@ -33,52 +33,76 @@ yarn add @shopify/react-native-skia react-native-reanimated react-native-gesture
 
 ## 📊 Components
 
-### 1. Bar Chart (New in v2.0)
+### 1. Pie Chart (New in version 3)
 
-A high-performance bar chart with virtualization, scrolling, and rich interactivity.
+Interactive Pie/Donut chart with selection, aggregation ("Others"), and high-performance path rendering.
+
+[Read the full PieChart Documentation](./docs/PieChartDocs.md) (Includes API Reference, aggregation strategies, start angle/direction, and advanced customization)
+
+<img src="./docs/assets/piechart/0.gif" alt="Interactive Pie" />
 
 ```tsx
-import { BarChart } from 'react-native-financial-charts';
+import { useMemo, useState } from 'react';
+import { Text, View } from 'react-native';
+import { PieChart } from 'react-native-financial-charts';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import type { PieChartItem } from 'react-native-financial-charts';
 
-const data: BarChartItemDataInterface[] = [
-  { label: 'Food 123 ABC', value: 1200, color: '#FF6B6B' }, // Red for expenses
-  { label: 'Transport', value: 800, color: '#4ECDC4' }, // Teal
-  { label: 'Invest', value: 3500, color: '#1A535C' }, // Dark Blue for savings
-  { label: 'Invest', value: 3800, color: '#1A535C' }, // Dark Blue for savings
-  { label: 'Rent', value: 2100, color: '#FFE66D' }, // Yellow
+const data: PieChartItem[] = [
+  { label: 'Rent', value: 1200, color: '#f87171' },
+  { label: 'Food', value: 800, color: '#60a5fa' },
+  { label: 'Savings', value: 1500, color: '#34d399' },
+  { label: 'Entertainment', value: 500, color: '#fbbf24' },
 ];
 
 const App = () => {
+  const [selectedSlice, setSelectedSlice] = useState<PieChartItem | null>(null);
+
+  const total = useMemo(
+    () => data.reduce((sum, item) => sum + item.value, 0),
+    []
+  );
+
+  const centerLabel = selectedSlice?.label ?? 'Total';
+  const centerValue = selectedSlice?.value ?? total;
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BarChart.Root
-        data={data}
-        width={390}
-        selectable
-        showXAxis
-        scrollToTheEnd
-      >
-        <BarChart.Canvas>
-          <BarChart.Grid />
-          <BarChart.Bar />
-          <BarChart.ToolTip
-            format={(value) => {
-              'worklet';
-              return value.toString();
-            }}
-          />
-          <BarChart.YAxis labelColor="#FFF" labelBackgroundColor="#696969" />
-        </BarChart.Canvas>
-      </BarChart.Root>
+    <GestureHandlerRootView
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+    >
+      <View style={{ width: 300, height: 300 }}>
+        <PieChart.Root
+          data={data}
+          size={300}
+          onSelect={(item) => setSelectedSlice(item)}
+        >
+          <PieChart.Canvas selectable>
+            <PieChart.Slices rounded />
+          </PieChart.Canvas>
+        </PieChart.Root>
+
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Text style={{ color: '#9CA3AF', fontSize: 14 }}>{centerLabel}</Text>
+          <Text style={{ color: '#111827', fontWeight: '700', fontSize: 24 }}>
+            ${centerValue.toFixed(0)}
+          </Text>
+        </View>
+      </View>
     </GestureHandlerRootView>
   );
 };
 ```
-
-[Read the full BarChart Documentation](./docs/BarChartDocs.md) (Includes API Reference, Scrolling, Y-Axis customization, and more)
-
-<img src="./docs/assets/barchart/0.gif" alt="Interactive Line" />
 
 ### 2. Line Chart
 
@@ -136,6 +160,54 @@ const App = () => {
         <LineChart.Tooltip.Value />
         <LineChart.Tooltip.Date />
       </LineChart.Root>
+    </GestureHandlerRootView>
+  );
+};
+```
+
+### 3. Bar Chart
+
+A high-performance bar chart with virtualization, scrolling, and rich interactivity.
+
+[Read the full BarChart Documentation](./docs/BarChartDocs.md) (Includes API Reference, Scrolling, Y-Axis customization, and more)
+
+<img src="./docs/assets/barchart/0.gif" alt="Interactive Bar" />
+
+```tsx
+import { BarChart } from 'react-native-financial-charts';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import type { BarChartItemDataInterface } from 'react-native-financial-charts';
+
+const data: BarChartItemDataInterface[] = [
+  { label: 'Food 123 ABC', value: 1200, color: '#FF6B6B' }, // Red for expenses
+  { label: 'Transport', value: 800, color: '#4ECDC4' }, // Teal
+  { label: 'Invest', value: 3500, color: '#1A535C' }, // Dark Blue for savings
+  { label: 'Invest', value: 3800, color: '#1A535C' }, // Dark Blue for savings
+  { label: 'Rent', value: 2100, color: '#FFE66D' }, // Yellow
+];
+
+const App = () => {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BarChart.Root
+        data={data}
+        width={390}
+        selectable
+        showXAxis
+        scrollToTheEnd
+      >
+        <BarChart.Canvas>
+          <BarChart.Grid />
+          <BarChart.Bar />
+          <BarChart.Tooltip
+            format={(value) => {
+              'worklet';
+              return value.toString();
+            }}
+          />
+          <BarChart.YAxis labelColor="#FFF" labelBackgroundColor="#696969" />
+        </BarChart.Canvas>
+      </BarChart.Root>
     </GestureHandlerRootView>
   );
 };

@@ -2,6 +2,12 @@ import { useBarChart } from '../BarChartContext';
 import { Group, RoundedRect, Text } from '@shopify/react-native-skia';
 
 export interface BarChartYAXisPropsInterface {
+  /**
+   * Reserved horizontal width used by BarChart.Root layout when YAxis is present.
+   * @default 50
+   */
+  width?: number;
+
   /** The color of the text values. Default: #9CA3AF (gray) */
   labelColor?: string;
 
@@ -116,5 +122,7 @@ const BarChartYAxis: React.FC<BarChartYAXisPropsInterface> = ({
     </Group>
   );
 };
+
+BarChartYAxis.displayName = 'BarChartYAxis';
 
 export default BarChartYAxis;

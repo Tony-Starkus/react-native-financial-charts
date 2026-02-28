@@ -19,6 +19,8 @@ export interface IProps {
   format?: (value: number) => string;
 }
 
+export type LineChartTooltipValuePropsInterface = IProps;
+
 const ChartTooltipPrice: React.FC<IProps> = ({
   style,
   containerStyle,

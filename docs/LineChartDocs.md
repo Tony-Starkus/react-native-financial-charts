@@ -30,11 +30,11 @@ export default function App() {
             <LineChart.Area />
             <LineChart.Line />
             <LineChart.Cursor />
-          </Chart.Canvas>
+          </LineChart.Canvas>
 
           <LineChart.Tooltip.Value />
           <LineChart.Tooltip.Date />
-        </Chart.Root>
+        </LineChart.Root>
       </GestureHandlerRootView>
     </View>
   );
@@ -61,8 +61,8 @@ Customize the line color and the area gradient to match specific assets (e.g., O
       strokeWidth={4}
     />
     <LineChart.Cursor crosshairColor="#F7931A" />
-  </Chart.Canvas>
-</Chart.Root>
+  </LineChart.Canvas>
+</LineChart.Root>
 ```
 
 ![Chart Sample 1](../docs/assets/1.png)
@@ -83,9 +83,9 @@ A small, simplified chart without tooltips or padding, perfect for lists or cryp
       strokeWidth={2}
       colors={['#10B981', '#10B981', '#10B981', '#10B981']}
     />
-  </Chart.Canvas>
+  </LineChart.Canvas>
   {/* No Tooltips, no Cursor */}
-</Chart.Root>
+</LineChart.Root>
 ```
 
 ![Chart Sample 2](../docs/assets/2.png)
@@ -111,9 +111,9 @@ const formatEUR = (value: number) => {
     <LineChart.Area />
     <LineChart.Line />
     <LineChart.Cursor />
-  </Chart.Canvas>
-  <LineChart.ToolTip.Value format={formatUSD} />
-</Chart.Root>;
+  </LineChart.Canvas>
+  <LineChart.Tooltip.Value format={formatUSD} />
+</LineChart.Root>;
 ```
 
 ![Chart Sample 3](../docs/assets/3.gif)
@@ -127,8 +127,8 @@ Change the background color and border radius of the floating tooltip.
   <LineChart.Canvas>
     <LineChart.Area />
     <LineChart.Line />
-    <LineChart.Cursor />'
-  </Chart.Canvas>
+    <LineChart.Cursor />
+  </LineChart.Canvas>
   <LineChart.Tooltip.Value
     containerStyle={{
       backgroundColor: 'white',
@@ -141,7 +141,7 @@ Change the background color and border radius of the floating tooltip.
       fontSize: 14,
     }}
   />
-</Chart.Root>
+</LineChart.Root>
 ```
 
 ![Chart Sample 4](../docs/assets/4.gif)
@@ -173,19 +173,22 @@ const formatUSD = (value: number) => {
 >
 ```
 
-# TypeScript Support
+## 🔷 TypeScript Support
 
-For advanced usage, you can import the following interfaces from react-native-financial-charts:
+For advanced usage, you can import these exported types from `react-native-financial-charts`:
 
-### Component Props
+Complete interface reference:
+[`docs/interfaces/LineChartInterfaces.md`](./interfaces/LineChartInterfaces.md)
 
-- LineChartRootPropsInterface: Props for <LineChart.Root />.
-- LineAreaPropsInterface: Props for <LineChart.Area />.
-- LinePropsInterface: Props for <LineChart.Line />.
-
-### Data and Refs
-
-- LineChartDataPoint: The shape of each object in the data array ({ timestamp: number, value: number }).
+- [`LineChartDataPoint`](./interfaces/LineChartInterfaces.md#linechartdatapoint): the shape of each point in the data array.
+- [`LineChartContextValue`](./interfaces/LineChartInterfaces.md#linechartcontextvalue): advanced/internal context value type.
+- [`LineChartRootPropsInterface`](./interfaces/LineChartInterfaces.md#linechartrootpropsinterface): props for `<LineChart.Root />`.
+- [`LineChartAreaPropsInterface`](./interfaces/LineChartInterfaces.md#linechartareapropsinterface): props for `<LineChart.Area />`.
+- [`LineChartLinePropsInterface`](./interfaces/LineChartInterfaces.md#linechartlinepropsinterface): props for `<LineChart.Line />`.
+- [`LineChartCursorPropsInterface`](./interfaces/LineChartInterfaces.md#linechartcursorpropsinterface): props for `<LineChart.Cursor />`.
+- [`LineChartBaselinePropsInterface`](./interfaces/LineChartInterfaces.md#linechartbaselinepropsinterface): props for `<LineChart.Baseline />`.
+- [`LineChartTooltipValuePropsInterface`](./interfaces/LineChartInterfaces.md#linecharttooltipvaluepropsinterface): props for `<LineChart.Tooltip.Value />`.
+- [`LineChartTooltipDatePropsInterface`](./interfaces/LineChartInterfaces.md#linecharttooltipdatepropsinterface): props for `<LineChart.Tooltip.Date />`.
 
 ```tsx
 import { LineChartDataPoint } from 'react-native-financial-charts';
@@ -201,13 +204,21 @@ const data: LineChartDataPoint[] = [
 
 The parent component that manages state and calculations.
 
-| Prop             | Type                   | Default        | Description                              |
-| ---------------- | ---------------------- | -------------- | ---------------------------------------- |
-| `data`           | `LineChartDataPoint[]` | **Required**   | `{ timestamp: number, value: number }[]` |
-| `height`         | `number`               | `250`          | Total height of the chart                |
-| `width`          | `number`               | `Screen Width` | Total width of the chart                 |
-| `padding`        | `number`               | `20`           | Internal horizontal padding              |
-| `containerStyle` | `ViewStyle`            | `{}`           | Styles for the main container            |
+| Prop             | Type                                                                             | Default        | Description                              |
+| ---------------- | -------------------------------------------------------------------------------- | -------------- | ---------------------------------------- |
+| `data`           | [`LineChartDataPoint`](./interfaces/LineChartInterfaces.md#linechartdatapoint)[] | **Required**   | `{ timestamp: number, value: number }[]` |
+| `height`         | `number`                                                                         | `250`          | Total height of the chart                |
+| `width`          | `number`                                                                         | `Screen Width` | Total width of the chart                 |
+| `padding`        | `number`                                                                         | `20`           | Internal horizontal padding              |
+| `containerStyle` | `StyleProp<ViewStyle>`                                                           | `undefined`    | Styles for the main container            |
+
+Notes:
+
+- For a drawable line, pass at least 2 points in `data`. With fewer points, the chart keeps interaction state but does not draw a valid path.
+
+### `LineChart.Root` and `ref`
+
+`LineChart.Root` does not currently expose an imperative `ref` API (no methods like `scrollTo...` or `selectedIndex`).
 
 ### `<LineChart.Canvas />`
 
@@ -215,11 +226,13 @@ The wrapper for all Skia elements.
 
 | Prop       | Type              | Default | Description                             |
 | ---------- | ----------------- | ------- | --------------------------------------- |
-| `children` | `React.ReactNode` | - - -   | Children element. Must be Skia elements |
+| `children` | `React.ReactNode` | `-`     | Children element. Must be Skia elements |
 
 ### `<LineChart.Line />`
 
 Draws the main chart line.
+
+Interface: [`LineChartLinePropsInterface`](./interfaces/LineChartInterfaces.md#linechartlinepropsinterface)
 
 | Prop          | Type       | Default                                        | Description                    |
 | ------------- | ---------- | ---------------------------------------------- | ------------------------------ |
@@ -230,6 +243,8 @@ Draws the main chart line.
 
 Draws a dashed horizontal line at the starting value (baseline). Useful for visualizing profit/loss.
 
+Interface: [`LineChartBaselinePropsInterface`](./interfaces/LineChartInterfaces.md#linechartbaselinepropsinterface)
+
 | Prop        | Type      | Default   | Description                                              |
 | ----------- | --------- | --------- | -------------------------------------------------------- |
 | `color`     | `string`  | `#858CA2` | Color of the dashed line and starting dot.               |
@@ -239,13 +254,17 @@ Draws a dashed horizontal line at the starting value (baseline). Useful for visu
 
 Draws the gradient fill below the line.
 
-| Prop             | Type       | Default                            | Description                                                                      |
-| ---------------- | ---------- | ---------------------------------- | -------------------------------------------------------------------------------- |
-| `gradientColors` | `string[]` | `['#000', '#000', '#000', '#000']` | Array of 4 colors for the area gradient (Top -> Baseline -> Baseline -> Bottom). |
+Interface: [`LineChartAreaPropsInterface`](./interfaces/LineChartInterfaces.md#linechartareapropsinterface)
+
+| Prop             | Type       | Default                                                | Description                                                                      |
+| ---------------- | ---------- | ------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `gradientColors` | `string[]` | `['#00E396E6', '#00E39600', '#EA394300', '#EA394326']` | Array of 4 colors for the area gradient (Top -> Baseline -> Baseline -> Bottom). |
 
 ### `<LineChart.Cursor />`
 
 The interactive cursor that follows the finger.
+
+Interface: [`LineChartCursorPropsInterface`](./interfaces/LineChartInterfaces.md#linechartcursorpropsinterface)
 
 | Prop             | Type     | Default   | Description                          |
 | ---------------- | -------- | --------- | ------------------------------------ |
@@ -256,18 +275,22 @@ The interactive cursor that follows the finger.
 
 Displays the current interpolated value (price, score, etc).
 
-| Prop             | Type                        | Default  | Description             |
-| ---------------- | --------------------------- | -------- | ----------------------- |
-| `format`         | `(value: number) => string` | `$ 0.00` | Format function         |
-| `style`          | `TextStyle`                 | `{}`     | Inner text style        |
-| `containerStyle` | `ViewStyle`                 | `{}`     | Tooltip container style |
+Interface: [`LineChartTooltipValuePropsInterface`](./interfaces/LineChartInterfaces.md#linecharttooltipvaluepropsinterface)
+
+| Prop             | Type                        | Default                                | Description             |
+| ---------------- | --------------------------- | -------------------------------------- | ----------------------- |
+| `format`         | `(value: number) => string` | `(value) => \`$ ${value.toFixed(2)}\`` | Format function         |
+| `style`          | `StyleProp<TextStyle>`      | `undefined`                            | Inner text style        |
+| `containerStyle` | `StyleProp<ViewStyle>`      | `undefined`                            | Tooltip container style |
 
 ### `<LineChart.Tooltip.Date />`
 
 Displays the current date/time.
 
+Interface: [`LineChartTooltipDatePropsInterface`](./interfaces/LineChartInterfaces.md#linecharttooltipdatepropsinterface)
+
 | Prop             | Type                        | Default      | Description             |
 | ---------------- | --------------------------- | ------------ | ----------------------- |
-| `style`          | `TextStyle`                 | `{}`         | Inner text style        |
-| `containerStyle` | `ViewStyle`                 | `{}`         | Tooltip container style |
+| `style`          | `StyleProp<TextStyle>`      | `undefined`  | Inner text style        |
+| `containerStyle` | `StyleProp<ViewStyle>`      | `undefined`  | Tooltip container style |
 | `format`         | `(value: number) => string` | `DD/MM/YYYY` | Timestamp formatter     |

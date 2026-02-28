@@ -5,6 +5,8 @@ export interface IProps {
   gradientColors?: string[];
 }
 
+export type LineChartAreaPropsInterface = IProps;
+
 /**
  * Draws the background gradient fill.
  */

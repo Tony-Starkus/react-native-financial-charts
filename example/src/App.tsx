@@ -1,8 +1,9 @@
-import { View, StyleSheet } from 'react-native';
-import { LineChart, BarChart } from 'react-native-financial-charts';
+import { View, StyleSheet, Text as RNText } from 'react-native';
+import { LineChart, PieChart } from 'react-native-financial-charts';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import type { BarChartItemDataInterface } from '../../src/charts/BarChart/interfaces';
+import type { PieChartItem } from '../../src/charts/PieChart/interfaces';
+import { useState } from 'react';
 
 const lineChartFakeData = [
   {
@@ -35,43 +36,88 @@ const lineChartFakeData = [
   },
 ];
 
-export const generateBarData = (
-  count: number,
-  min: number = 100,
-  max: number = 5000,
-  options?: {
-    labelPrefix?: string;
-    useRandomColors?: boolean;
-  }
-): BarChartItemDataInterface[] => {
-  const prefix = options?.labelPrefix ?? 'Item';
-  const colors = ['#FF6B6B', '#4ECDC4', '#1A535C', '#FFE66D', '#FF9F1C'];
-
-  return Array.from({ length: count }, (_, index) => {
-    const value = Math.floor(Math.random() * (max - min + 1)) + min;
-
-    const item: BarChartItemDataInterface = {
-      label: `${prefix} ${index + 1}`,
-      value: value,
-    };
-
-    if (options?.useRandomColors) {
-      item.color = colors[index % colors.length];
-    }
-
-    return item;
-  });
-};
-
-const heavyData = generateBarData(365, 1000, 9000, { labelPrefix: 'Dia' });
+const chartData: PieChartItem[] = [
+  { label: 'Rent', value: 1200, color: '#f87171' },
+  { label: 'Food', value: 800, color: '#60a5fa' },
+  { label: 'Savings', value: 1500, color: '#34d399' },
+  { label: 'Entertainment', value: 500, color: '#fbbf24' },
+  { label: 'Rent', value: 1200, color: '#f87171' },
+  { label: 'Food', value: 800, color: '#60a5fa' },
+  { label: 'Savings', value: 1500, color: '#34d399' },
+  { label: 'Entertainment', value: 500, color: '#fbbf24' },
+  { label: 'Rent', value: 1200, color: '#f87171' },
+  { label: 'Food', value: 800, color: '#60a5fa' },
+  { label: 'Savings', value: 1500, color: '#34d399' },
+  { label: 'Entertainment', value: 500, color: '#fbbf24' },
+  { label: 'Rent', value: 1200, color: '#f87171' },
+  { label: 'Food', value: 800, color: '#60a5fa' },
+  { label: 'Savings', value: 1500, color: '#34d399' },
+  { label: 'Entertainment', value: 500, color: '#fbbf24' },
+  { label: 'Rent', value: 1200, color: '#f87171' },
+];
 
 export default function App() {
-  const formatBRL = (val: number) => `R$ ${val.toFixed(0)}`;
+  const [selected, setSelected] = useState<PieChartItem | null>(null);
 
   return (
     <View style={styles.container}>
       <GestureHandlerRootView style={styles.content}>
-        <BarChart.Root
+        <View style={styles.container}>
+          <PieChart.Root data={chartData} size={320} onSelect={setSelected}>
+            <PieChart.Canvas selectable>
+              <PieChart.Slices rounded sliceGapAngle={1} sliceThickness={5} />
+            </PieChart.Canvas>
+
+            {/* Content inside the donut hole */}
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <RNText
+                style={{
+                  fontSize: 14,
+                  color: '#6b7280',
+                }}
+              >
+                {selected ? selected.label : 'Total'}
+              </RNText>
+              <RNText
+                style={{
+                  fontSize: 22,
+                  fontWeight: 'bold',
+                  color: '#111827',
+                }}
+              >
+                $
+                {selected
+                  ? selected.value
+                  : chartData.reduce((p, c) => p + c.value, 0)}
+              </RNText>
+            </View>
+          </PieChart.Root>
+        </View>
+        <View style={styles.lineChartContent}>
+          <LineChart.Root data={lineChartFakeData} width={400}>
+            <LineChart.Canvas>
+              <LineChart.Area />
+              <LineChart.Baseline />
+              <LineChart.Line />
+              <LineChart.Cursor />
+            </LineChart.Canvas>
+            <LineChart.Tooltip.Value />
+            <LineChart.Tooltip.Date />
+          </LineChart.Root>
+        </View>
+      </GestureHandlerRootView>
+      <GestureHandlerRootView style={styles.content}>
+        {/* <BarChart.Root
           data={heavyData}
           width={400}
           isScrollable
@@ -84,38 +130,7 @@ export default function App() {
             <BarChart.YAxis formatLabel={formatBRL} labelColor="#000" />
             <BarChart.Tooltip />
           </BarChart.Canvas>
-        </BarChart.Root>
-        {/* <BarChart.Root
-          data={barChartFakeData}
-          width={390}
-          selectable
-          showXAxis
-          scrollToTheEnd
-        >
-          <BarChart.Canvas>
-            <BarChart.Grid />
-            <BarChart.Bar />
-            <BarChart.ToolTip
-              format={(value) => {
-                'worklet';
-                return value.toString();
-              }}
-            />
-            <BarChart.YAxis labelColor="#FFF" labelBackgroundColor="#696969" />
-          </BarChart.Canvas>
         </BarChart.Root> */}
-      </GestureHandlerRootView>
-      <GestureHandlerRootView style={styles.lineChartContent}>
-        <LineChart.Root data={lineChartFakeData} width={400}>
-          <LineChart.Canvas>
-            <LineChart.Area />
-            <LineChart.Baseline />
-            <LineChart.Line />
-            <LineChart.Cursor />
-          </LineChart.Canvas>
-          <LineChart.Tooltip.Value />
-          <LineChart.Tooltip.Date />
-        </LineChart.Root>
       </GestureHandlerRootView>
     </View>
   );
@@ -132,6 +147,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   lineChartContent: {
+    backgroundColor: 'red',
     flex: 1,
     marginTop: 200,
   },
