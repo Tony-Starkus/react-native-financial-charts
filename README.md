@@ -33,7 +33,7 @@ yarn add @shopify/react-native-skia react-native-reanimated react-native-gesture
 
 ## 📊 Components
 
-### 1. Pie Chart (New in version 3)
+### 1. Pie Chart
 
 Interactive Pie/Donut chart with selection, aggregation ("Others"), and high-performance path rendering.
 
