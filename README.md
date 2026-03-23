@@ -3,6 +3,7 @@
 <p align="center">
 <img src="./docs/assets/0.gif" alt="Interactive Line Chart" width="49%" />
 <img src="./docs/assets/barchart/0.gif" alt="Interactive Bar Chart" width="49%" />
+  <img src="./docs/assets/candlestick/0.gif" alt="Interactive Candlestick Chart" />
 </p>
 
 A **high-performance** financial charting library for React Native, built on the power of **Skia** and **Reanimated**.
@@ -38,6 +39,8 @@ yarn add @shopify/react-native-skia react-native-reanimated react-native-gesture
 Financial-first OHLC chart with horizontal scrolling, automatic vertical scaling, selection, Y-axis, last price indicator, cursor, and contextual tooltips.
 
 [Read the full CandlestickChart Documentation](./docs/CandlestickChartDocs.md)
+
+  <img src="./docs/assets/candlestick/0.gif" alt="Interactive Candlestick Chart" />
 
 ```tsx
 import { CandlestickChart } from 'react-native-financial-charts';
