@@ -1,7 +1,7 @@
 {
   "name": "react-native-financial-charts",
   "version": "2.2.1",
-  "description": "A high-performance financial visual chart for React Native built with Skia.",
+  "description": "High-performance financial charts for React Native built with Skia and Reanimated. Includes line, bar, pie, and candlestick charts.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
@@ -42,8 +42,24 @@
   },
   "keywords": [
     "react-native",
+    "react-native-charts",
+    "chart",
+    "charts",
+    "financial-charts",
+    "financial-chart",
+    "candlestick-chart",
+    "trading-chart",
+    "stock-chart",
+    "pie-chart",
+    "bar-chart",
+    "line-chart",
+    "skia",
+    "react-native-skia",
+    "reanimated",
+    "data-visualization",
     "ios",
-    "android"
+    "android",
+    "typescript"
   ],
   "repository": {
     "type": "git",
