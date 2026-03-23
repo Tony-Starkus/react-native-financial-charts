@@ -15,6 +15,15 @@ import BarChartYAxis from './charts/BarChart/components/BarChartYAxis';
 import PieChartProvider from './charts/PieChart/PieChartContext';
 import PieChartCanvas from './charts/PieChart/components/PieChartCanvas';
 import PieChartSlices from './charts/PieChart/components/PieChartSlices';
+import CandlestickChartProvider from './charts/CandlestickChart/CandlestickChartContext';
+import CandlestickChartCanvas from './charts/CandlestickChart/components/CandlestickChartCanvas';
+import CandlestickChartCandles from './charts/CandlestickChart/components/CandlestickChartCandles';
+import CandlestickChartGrid from './charts/CandlestickChart/components/CandlestickChartGrid';
+import CandlestickChartYAxis from './charts/CandlestickChart/components/CandlestickChartYAxis';
+import CandlestickChartCursor from './charts/CandlestickChart/components/CandlestickChartCursor';
+import CandlestickChartLastPrice from './charts/CandlestickChart/components/CandlestickChartLastPrice';
+import CandlestickChartTooltipOHLC from './charts/CandlestickChart/components/CandlestickChartTooltipOHLC';
+import CandlestickChartTooltipDate from './charts/CandlestickChart/components/CandlestickChartTooltipDate';
 
 export const BarChart = {
   Root: BarChartProvider,
@@ -44,6 +53,20 @@ export const PieChart = {
   Slices: PieChartSlices,
 };
 
+export const CandlestickChart = {
+  Root: CandlestickChartProvider,
+  Canvas: CandlestickChartCanvas,
+  Candles: CandlestickChartCandles,
+  Grid: CandlestickChartGrid,
+  YAxis: CandlestickChartYAxis,
+  Cursor: CandlestickChartCursor,
+  LastPrice: CandlestickChartLastPrice,
+  Tooltip: {
+    OHLC: CandlestickChartTooltipOHLC,
+    Date: CandlestickChartTooltipDate,
+  },
+};
+
 export type { BarChartBarPropsInterface } from './charts/BarChart/components/BarChartBar';
 export type { BarChartGridPropsInterface } from './charts/BarChart/components/BarChartGrid';
 export type { BarChartTooltipPropsInterface } from './charts/BarChart/components/BarChartTooltip';
@@ -57,7 +80,16 @@ export type { LineChartTooltipValuePropsInterface } from './charts/LineChart/com
 export type { LineChartTooltipDatePropsInterface } from './charts/LineChart/components/ChartTooltipDate';
 export type { PieChartCanvasPropsInterface } from './charts/PieChart/components/PieChartCanvas';
 export type { PieChartSlicesPropsInterface } from './charts/PieChart/components/PieChartSlices';
+export type { CandlestickChartCanvasPropsInterface } from './charts/CandlestickChart/components/CandlestickChartCanvas';
+export type { CandlestickChartCandlesPropsInterface } from './charts/CandlestickChart/components/CandlestickChartCandles';
+export type { CandlestickChartGridPropsInterface } from './charts/CandlestickChart/components/CandlestickChartGrid';
+export type { CandlestickChartYAxisPropsInterface } from './charts/CandlestickChart/components/CandlestickChartYAxis';
+export type { CandlestickChartCursorPropsInterface } from './charts/CandlestickChart/components/CandlestickChartCursor';
+export type { CandlestickChartLastPricePropsInterface } from './charts/CandlestickChart/components/CandlestickChartLastPrice';
+export type { CandlestickChartTooltipOHLCPropsInterface } from './charts/CandlestickChart/components/CandlestickChartTooltipOHLC';
+export type { CandlestickChartTooltipDatePropsInterface } from './charts/CandlestickChart/components/CandlestickChartTooltipDate';
 
 export * from './charts/LineChart/interfaces';
 export * from './charts/BarChart/interfaces';
 export * from './charts/PieChart/interfaces';
+export * from './charts/CandlestickChart/interfaces';

@@ -256,7 +256,8 @@ const LineChartProvider: React.FC<ChartRootPropsInterface> = ({
     if (
       preCalculatedY !== undefined &&
       preCalculatedY !== -1 &&
-      preCalculatedValue
+      preCalculatedValue !== undefined &&
+      preCalculatedValue !== -1
     ) {
       currentY.value = preCalculatedY;
       currentValue.value = preCalculatedValue;

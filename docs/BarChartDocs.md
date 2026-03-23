@@ -342,7 +342,7 @@ const chartRef = useRef<BarChartRef>(null);
 - `selectedIndex(-1)` clears the current selection.
 - `selectedIndex(index, { scrollToBar: true })` only scrolls if `isScrollable` is enabled and `index !== -1`.
 - `selectedIndex(..., { animatedScroll })` controls only the auto-scroll animation triggered by `scrollToBar`.
-- `scrollToIndex(index)` does not clamp index values internally. Prefer passing valid indices.
+- `scrollToIndex(index)` clamps the target index to the valid data range.
 
 ---
 

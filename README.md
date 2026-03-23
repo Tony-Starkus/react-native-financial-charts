@@ -33,7 +33,50 @@ yarn add @shopify/react-native-skia react-native-reanimated react-native-gesture
 
 ## 📊 Components
 
-### 1. Pie Chart
+### 1. Candlestick Chart
+
+Financial-first OHLC chart with horizontal scrolling, automatic vertical scaling, selection, Y-axis, last price indicator, cursor, and contextual tooltips.
+
+[Read the full CandlestickChart Documentation](./docs/CandlestickChartDocs.md)
+
+```tsx
+import { CandlestickChart } from 'react-native-financial-charts';
+import type { CandlestickChartDataPoint } from 'react-native-financial-charts';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+const data: CandlestickChartDataPoint[] = [
+  {
+    timestamp: new Date('2026-03-10T10:00:00').getTime(),
+    open: 42150,
+    high: 42780,
+    low: 41890,
+    close: 42520,
+  },
+  {
+    timestamp: new Date('2026-03-11T10:00:00').getTime(),
+    open: 42520,
+    high: 43210,
+    low: 42340,
+    close: 43080,
+  },
+];
+
+<GestureHandlerRootView style={{ flex: 1 }}>
+  <CandlestickChart.Root data={data} width={360} selectable isScrollable>
+    <CandlestickChart.Canvas>
+      <CandlestickChart.Grid dashEffect={[4, 4]} />
+      <CandlestickChart.Candles />
+      <CandlestickChart.LastPrice />
+      <CandlestickChart.Cursor />
+      <CandlestickChart.Tooltip.OHLC />
+      <CandlestickChart.Tooltip.Date />
+      <CandlestickChart.YAxis />
+    </CandlestickChart.Canvas>
+  </CandlestickChart.Root>
+</GestureHandlerRootView>;
+```
+
+### 2. Pie Chart
 
 Interactive Pie/Donut chart with selection, aggregation ("Others"), and high-performance path rendering.
 
@@ -104,7 +147,7 @@ const App = () => {
 };
 ```
 
-### 2. Line Chart
+### 3. Line Chart
 
 The classic interactive line chart for financial data.
 
@@ -165,7 +208,7 @@ const App = () => {
 };
 ```
 
-### 3. Bar Chart
+### 4. Bar Chart
 
 A high-performance bar chart with virtualization, scrolling, and rich interactivity.
 

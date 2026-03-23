@@ -256,7 +256,8 @@ const BarChartProvider: React.FC<
       scrollViewRef.current?.scrollToEnd({ animated });
     },
     scrollToIndex: (index: number, animated = true) => {
-      const positionX = index * (barWidth + spacing);
+      const safeIndex = Math.max(0, Math.min(index, data.length - 1));
+      const positionX = safeIndex * (barWidth + spacing);
       scrollViewRef.current?.scrollTo({ x: positionX, animated });
     },
     selectedIndex: (
