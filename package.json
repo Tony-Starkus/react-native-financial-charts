@@ -1,6 +1,6 @@
 {
   "name": "react-native-financial-charts",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A high-performance financial visual chart for React Native built with Skia.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
