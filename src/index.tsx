@@ -24,6 +24,14 @@ import CandlestickChartCursor from './charts/CandlestickChart/components/Candles
 import CandlestickChartLastPrice from './charts/CandlestickChart/components/CandlestickChartLastPrice';
 import CandlestickChartTooltipOHLC from './charts/CandlestickChart/components/CandlestickChartTooltipOHLC';
 import CandlestickChartTooltipDate from './charts/CandlestickChart/components/CandlestickChartTooltipDate';
+import GaugeChartProvider from './charts/GaugeChart/GaugeChartContext';
+import GaugeChartCanvas from './charts/GaugeChart/components/GaugeChartCanvas';
+import GaugeChartTrack from './charts/GaugeChart/components/GaugeChartTrack';
+import GaugeChartSegments from './charts/GaugeChart/components/GaugeChartSegments';
+import GaugeChartProgress from './charts/GaugeChart/components/GaugeChartProgress';
+import GaugeChartNeedle from './charts/GaugeChart/components/GaugeChartNeedle';
+import GaugeChartTicks from './charts/GaugeChart/components/GaugeChartTicks';
+import GaugeChartValue from './charts/GaugeChart/components/GaugeChartValue';
 
 export const BarChart = {
   Root: BarChartProvider,
@@ -67,6 +75,17 @@ export const CandlestickChart = {
   },
 };
 
+export const GaugeChart = {
+  Root: GaugeChartProvider,
+  Canvas: GaugeChartCanvas,
+  Track: GaugeChartTrack,
+  Segments: GaugeChartSegments,
+  Progress: GaugeChartProgress,
+  Needle: GaugeChartNeedle,
+  Ticks: GaugeChartTicks,
+  Value: GaugeChartValue,
+};
+
 export type { BarChartBarPropsInterface } from './charts/BarChart/components/BarChartBar';
 export type { BarChartGridPropsInterface } from './charts/BarChart/components/BarChartGrid';
 export type { BarChartTooltipPropsInterface } from './charts/BarChart/components/BarChartTooltip';
@@ -88,8 +107,16 @@ export type { CandlestickChartCursorPropsInterface } from './charts/CandlestickC
 export type { CandlestickChartLastPricePropsInterface } from './charts/CandlestickChart/components/CandlestickChartLastPrice';
 export type { CandlestickChartTooltipOHLCPropsInterface } from './charts/CandlestickChart/components/CandlestickChartTooltipOHLC';
 export type { CandlestickChartTooltipDatePropsInterface } from './charts/CandlestickChart/components/CandlestickChartTooltipDate';
+export type { GaugeChartCanvasPropsInterface } from './charts/GaugeChart/components/GaugeChartCanvas';
+export type { GaugeChartTrackPropsInterface } from './charts/GaugeChart/components/GaugeChartTrack';
+export type { GaugeChartSegmentsPropsInterface } from './charts/GaugeChart/components/GaugeChartSegments';
+export type { GaugeChartProgressPropsInterface } from './charts/GaugeChart/components/GaugeChartProgress';
+export type { GaugeChartNeedlePropsInterface } from './charts/GaugeChart/components/GaugeChartNeedle';
+export type { GaugeChartTicksPropsInterface } from './charts/GaugeChart/components/GaugeChartTicks';
+export type { GaugeChartValuePropsInterface } from './charts/GaugeChart/components/GaugeChartValue';
 
 export * from './charts/LineChart/interfaces';
 export * from './charts/BarChart/interfaces';
 export * from './charts/PieChart/interfaces';
 export * from './charts/CandlestickChart/interfaces';
+export * from './charts/GaugeChart/interfaces';
