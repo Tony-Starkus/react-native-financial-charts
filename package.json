@@ -1,6 +1,6 @@
 {
   "name": "react-native-financial-charts",
-  "version": "2.2.2",
+  "version": "3.0.0",
   "description": "High-performance financial charts for React Native built with Skia and Reanimated. Includes line, bar, pie, candlestick, and gauge charts.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
