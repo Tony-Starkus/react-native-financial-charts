@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -7,9 +8,11 @@ import React, {
 } from 'react';
 import type {
   BarChartItemDataInterface,
+  BarChartItemKey,
   BarChartRef,
   BarChartRefSelectedIndexPropsType,
   BarChartRootPropsInterface,
+  BarChartSelectionMode,
 } from './interfaces';
 import {
   Easing,
@@ -21,7 +24,13 @@ import {
 } from 'react-native-reanimated';
 import { matchFont, type SkFont } from '@shopify/react-native-skia';
 import { BAR_CHART_PADDING_LEFT, BAR_CHART_PADDING_RIGHT } from './constants';
-import { calculateNiceScale } from './utils';
+import {
+  calculateNiceScale,
+  findBarIndexByKey,
+  findSegmentIndexByKey,
+  getCenteredScrollOffset,
+  normalizeBarData,
+} from './utils';
 
 interface BarChartContextInterface {
   // Data
@@ -66,6 +75,16 @@ interface BarChartContextInterface {
   // Interaction
   selectable: boolean;
   selectedIndex: SharedValue<number>;
+  /** Selected segment inside the selected bar (-1 = whole bar). */
+  selectedSegmentIndex: SharedValue<number>;
+  selectionMode: BarChartSelectionMode;
+  segmentGap: number;
+  /** Highlighted series key in `selectionMode="series"` (null = none). */
+  selectedSeriesKey: SharedValue<BarChartItemKey | null>;
+  /** True when series selection is driven by the `selectedSeriesKey` prop. */
+  isSeriesControlled: boolean;
+  /** Fires `onSeriesSelect`. JS thread only. */
+  notifySeriesSelection: (key: BarChartItemKey | null) => void;
 
   // Animation (Master controller)
   entryProgress: SharedValue<number>;
@@ -78,7 +97,12 @@ interface BarChartContextInterface {
   hasYAxis: boolean;
   yAxisWidth: number;
 
-  onBarPress?: (item: BarChartItemDataInterface | null, index: number) => void;
+  onBarPress?: BarChartRootPropsInterface['onBarPress'];
+
+  /** True when selection is driven by the `selectedKey` prop. */
+  isControlled: boolean;
+  /** Fires `onBarPress` for an index (-1 = deselection). JS thread only. */
+  notifySelection: (index: number, segmentIndex?: number) => void;
 }
 
 const LABEL_PADDING_TOP = 4;
@@ -93,7 +117,7 @@ const BarChartProvider: React.FC<
     ref?: React.Ref<BarChartRef>;
   }
 > = ({
-  data,
+  data: rawData,
   isLoading = false,
   width = 300,
   height = 300,
@@ -111,14 +135,31 @@ const BarChartProvider: React.FC<
   verticalScaleFactor = 0.8,
   ref,
   onBarPress,
+  selectedKey,
+  selectedSegmentKey,
+  scrollToSelectedBar = false,
+  selectionMode = 'bar',
+  segmentGap = 0,
+  selectedSeriesKey: selectedSeriesKeyProp,
+  onSeriesSelect,
   children,
 }) => {
+  const isSeriesControlled = selectedSeriesKeyProp !== undefined;
+
+  const isControlled = selectedKey !== undefined;
+
   // 1. Font Loading (Fallback to System Font if needed)
   const systemFont = matchFont({ fontFamily: 'sans-serif', fontSize: 10 });
   const font = propFont ?? systemFont;
 
+  // Stacked items expose their stack total as `value`, so every consumer
+  // (Y scale, tooltip, value labels, onBarPress) works unchanged.
+  const data = useMemo(() => normalizeBarData(rawData), [rawData]);
+
   // 2. Shared Values & Refs
   const selectedIndex = useSharedValue(-1);
+  const selectedSegmentIndex = useSharedValue(-1);
+  const selectedSeriesKey = useSharedValue<BarChartItemKey | null>(null);
   const entryProgress = useSharedValue(0);
 
   const scrollViewRef = useAnimatedRef<any>();
@@ -247,7 +288,168 @@ const BarChartProvider: React.FC<
     isLoading,
   ]);
 
-  // 4. Expose Ref Mathods
+  // 4. Selection helpers
+  const notifySelection = useCallback(
+    (index: number, segmentIndex: number = -1) => {
+      if (!onBarPress) return;
+      const item = index >= 0 ? data[index] : undefined;
+      if (item) onBarPress(item, index, segmentIndex);
+      else onBarPress(null, -1, -1);
+    },
+    [onBarPress, data]
+  );
+
+  const notifySeriesSelection = useCallback(
+    (key: BarChartItemKey | null) => {
+      onSeriesSelect?.(key);
+    },
+    [onSeriesSelect]
+  );
+
+  const requestSeriesSelection = useCallback(
+    (key: BarChartItemKey | null) => {
+      if (selectionMode !== 'series') return;
+      if (!isSeriesControlled) selectedSeriesKey.value = key;
+      notifySeriesSelection(key);
+    },
+    [
+      selectionMode,
+      isSeriesControlled,
+      selectedSeriesKey,
+      notifySeriesSelection,
+    ]
+  );
+
+  // Series selection only exists in series mode. Controlled: mirror the prop.
+  // Uncontrolled: clear when leaving series mode.
+  useEffect(() => {
+    if (selectionMode !== 'series') {
+      selectedSeriesKey.value = null;
+      return;
+    }
+    if (isSeriesControlled) {
+      selectedSeriesKey.value = selectedSeriesKeyProp ?? null;
+    }
+  }, [
+    selectionMode,
+    isSeriesControlled,
+    selectedSeriesKeyProp,
+    selectedSeriesKey,
+  ]);
+
+  // Clamp a requested segment to what the current mode/item allows.
+  const resolveSegmentIndex = useCallback(
+    (index: number, segmentIndex: number | undefined) => {
+      if (selectionMode !== 'segment' || index < 0) return -1;
+      const count = data[index]?.segments?.length ?? 0;
+      if (segmentIndex === undefined || segmentIndex < 0) return -1;
+      return segmentIndex < count ? segmentIndex : -1;
+    },
+    [selectionMode, data]
+  );
+
+  const scrollToBarIndex = useCallback(
+    (index: number, animated?: boolean) => {
+      if (!isScrollable || index < 0 || index >= data.length) return;
+      const targetX = getCenteredScrollOffset(
+        index,
+        effectiveBarWidth,
+        spacing,
+        BAR_CHART_PADDING_LEFT,
+        canvasWidth,
+        contentWidth
+      );
+      scrollViewRef.current?.scrollTo({ x: targetX, animated });
+    },
+    [
+      isScrollable,
+      data.length,
+      effectiveBarWidth,
+      spacing,
+      canvasWidth,
+      contentWidth,
+      scrollViewRef,
+    ]
+  );
+
+  // Controlled: mirror `selectedKey` into the shared value. Idempotent, so
+  // re-running on data identity changes is harmless.
+  useEffect(() => {
+    if (!isControlled) return;
+    const index = findBarIndexByKey(data, selectedKey);
+    selectedIndex.value = index;
+    selectedSegmentIndex.value =
+      selectionMode === 'segment' && index !== -1
+        ? findSegmentIndexByKey(data[index], selectedSegmentKey)
+        : -1;
+    if (scrollToSelectedBar && index !== -1) {
+      scrollToBarIndex(index, true);
+    }
+    // scrollToBarIndex is intentionally left out: layout changes alone must
+    // not re-trigger the auto-scroll.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isControlled,
+    selectedKey,
+    selectedSegmentKey,
+    selectionMode,
+    data,
+    scrollToSelectedBar,
+    selectedIndex,
+    selectedSegmentIndex,
+  ]);
+
+  // Single entry point for imperative selection (same semantics as a tap):
+  // uncontrolled -> update shared value; always notify.
+  const requestSelection = useCallback(
+    (
+      index: number,
+      options?: BarChartRefSelectedIndexPropsType,
+      requestedSegmentIndex?: number
+    ) => {
+      const segmentIndex = resolveSegmentIndex(index, requestedSegmentIndex);
+      if (!isControlled) {
+        selectedIndex.value = index;
+        selectedSegmentIndex.value = segmentIndex;
+        if (options?.scrollToBar && index !== -1) {
+          scrollToBarIndex(index, options.animatedScroll);
+        }
+      }
+      notifySelection(index, segmentIndex);
+    },
+    [
+      isControlled,
+      resolveSegmentIndex,
+      selectedIndex,
+      selectedSegmentIndex,
+      scrollToBarIndex,
+      notifySelection,
+    ]
+  );
+
+  // Uncontrolled: drop selections that point past the end of the data, and
+  // segment selections that no longer apply (mode switched to 'bar', or the
+  // bar lost the segment).
+  useEffect(() => {
+    if (isControlled) return;
+    if (selectedIndex.value >= data.length) {
+      selectedIndex.value = -1;
+      selectedSegmentIndex.value = -1;
+      return;
+    }
+    selectedSegmentIndex.value = resolveSegmentIndex(
+      selectedIndex.value,
+      selectedSegmentIndex.value
+    );
+  }, [
+    isControlled,
+    data.length,
+    resolveSegmentIndex,
+    selectedIndex,
+    selectedSegmentIndex,
+  ]);
+
+  // 5. Expose Ref Methods
   useImperativeHandle(ref, () => ({
     scrollToStart: (animated = true) => {
       scrollViewRef.current?.scrollTo({ x: 0, animated });
@@ -264,28 +466,23 @@ const BarChartProvider: React.FC<
       index: number,
       options?: BarChartRefSelectedIndexPropsType
     ) => {
-      // Update the SharedValue (triggers UI animations instantly)
-      if (index >= -1 && index < data.length) {
-        selectedIndex.value = index;
-
-        // Scroll to the bar
-        if (options?.scrollToBar && index !== -1 && isScrollable) {
-          const itemFullWidth = barWidth + spacing;
-
-          // Center logic: Item Pos - Half Screen + Half Item
-          const itemX = BAR_CHART_PADDING_LEFT + index * itemFullWidth;
-          const centerOffsetX = itemX - canvasWidth / 2 + barWidth / 2;
-
-          // Ensure scroll don't past bounds
-          const maxOffset = contentWidth - canvasWidth;
-          const targetX = Math.max(0, Math.min(centerOffsetX, maxOffset));
-
-          scrollViewRef.current?.scrollTo({
-            x: targetX,
-            animated: options.animatedScroll,
-          });
-        }
-      }
+      if (index < -1 || index >= data.length) return;
+      requestSelection(index, options, options?.segmentIndex);
+    },
+    selectByKey: (key, options) => {
+      const index = findBarIndexByKey(data, key);
+      requestSelection(
+        index,
+        options,
+        findSegmentIndexByKey(data[index], options?.segmentKey)
+      );
+    },
+    clearSelection: () => {
+      if (selectionMode === 'series') requestSeriesSelection(null);
+      else requestSelection(-1);
+    },
+    selectSeries: (key) => {
+      requestSeriesSelection(key);
     },
   }));
 
@@ -314,6 +511,12 @@ const BarChartProvider: React.FC<
         showXAxis,
         selectable: selectable ?? !!onBarPress,
         selectedIndex,
+        selectedSegmentIndex,
+        selectionMode,
+        segmentGap,
+        selectedSeriesKey,
+        isSeriesControlled,
+        notifySeriesSelection,
         entryProgress,
         maxValue,
         scrollViewRef,
@@ -321,6 +524,8 @@ const BarChartProvider: React.FC<
         hasYAxis,
         yAxisWidth,
         onBarPress,
+        isControlled,
+        notifySelection,
       }}
     >
       {children}

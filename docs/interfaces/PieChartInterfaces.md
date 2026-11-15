@@ -7,6 +7,7 @@ Type interfaces related to PieChart and its subcomponents.
 ```tsx
 import type {
   PieChartItem,
+  PieChartItemKey,
   PieChartRootPropsInterface,
   PieChartRef,
   PieChartCanvasPropsInterface,
@@ -14,16 +15,22 @@ import type {
 } from 'react-native-financial-charts';
 ```
 
+## `PieChartItemKey`
+
+`string | number` — key used to address a slice from outside the chart (`item.id`, or `item.label` as fallback).
+
 ## `PieChartItem`
 
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
+| `id` | `PieChartItemKey` | No | Stable identifier for external selection. Falls back to `label`. |
 | `label` | `string` | No | Slice label. |
 | `value` | `number` | Yes | Slice numeric value. |
 | `color` | `string` | No | Slice color (fallback generated when missing). |
 | `isAggregated` | `boolean` | No | Marks aggregated "Others" slice (internal/derived). |
 | `groupedItems` | `PieChartItem[]` | No | Source grouped items for aggregated slice (internal/derived). |
 | `renderValue` | `number` | No | Internal visual weight used for rendering. |
+| `sourceIndex` | `number` | No | Index in the original `data` prop (internal/derived; undefined for "Others"). |
 
 ## `PieChartRootPropsInterface`
 
@@ -42,6 +49,7 @@ import type {
 | `othersLabel` | `string` | No | Label for aggregated slice. |
 | `othersColor` | `string` | No | Color for aggregated slice. |
 | `othersVisualAngle` | `number` | No | Optional visual angle override for aggregated slice. |
+| `selectedKey` | `PieChartItemKey \| null` | No | Controlled selection. `undefined` = uncontrolled, `null` = none selected. |
 | `children` | `React.ReactNode` | Yes | Chart composition (`Canvas`, `Slices`, etc). |
 
 ## `PieChartRef`
@@ -49,6 +57,7 @@ import type {
 | Method | Type | Description |
 | --- | --- | --- |
 | `selectedIndex` | `(index: number) => void` | Selects a slice by index (`-1` clears). Index is based on processed/rendered data (after aggregation). |
+| `selectByKey` | `(key: PieChartItemKey \| null) => void` | Selects by key (`id`, fallback `label`). Grouped keys select "Others". Fires `onSelect`. |
 | `clearSelection` | `() => void` | Clears current selection. |
 
 ## `PieChartCanvasPropsInterface`

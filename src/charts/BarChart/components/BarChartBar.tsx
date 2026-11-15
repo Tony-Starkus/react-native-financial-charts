@@ -1,20 +1,35 @@
 import React from 'react';
 import { useBarChart } from '../BarChartContext';
 import {
+  ClipOp,
   Group,
   Path,
+  PathOp,
   Skia,
   Picture,
   type SkFont,
 } from '@shopify/react-native-skia';
 import { BAR_CHART_PADDING_LEFT } from '../constants';
 import {
+  computeStackSegmentRects,
+  getSegmentDimAmount,
+  getSegmentKey,
+} from '../utils';
+import type { BarChartItemDataInterface, BarChartItemKey } from '../interfaces';
+import {
+  Easing,
   Extrapolation,
   interpolate,
+  useAnimatedReaction,
   useDerivedValue,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import BarChartSkeleton from './BarChartSkeleton';
+
+// Captured as a plain number so the worklet closure stays primitive.
+const CLIP_INTERSECT = ClipOp.Intersect;
+const PATH_OP_INTERSECT = PathOp.Intersect;
 
 export interface BarChartBarPropsInterface {
   /**
@@ -50,9 +65,31 @@ export interface BarChartBarPropsInterface {
   valueLabelPaddingBottom?: number;
   /**
    * Function to format the value displayed above the bar.
+   * For stacked bars, `value` is the stack total.
    * NOTE: Runs on the UI Thread (Worklet). Keep it simple (e.g., val.toFixed(2)).
    */
-  formatValueLabel?: (value: number) => string;
+  formatValueLabel?: (value: number, item: BarChartItemDataInterface) => string;
+  /**
+   * Color of X-axis labels for items with `highlighted: true`.
+   * @default '#F5A524'
+   */
+  highlightedLabelColor?: string;
+  /**
+   * Optional font for highlighted X-axis labels (e.g. a bold variant).
+   * Falls back to the chart font.
+   */
+  highlightedLabelFont?: SkFont | null;
+  /**
+   * Color painted over segments that are not part of the highlighted series
+   * (`selectionMode="series"`). When omitted, inactive segments keep their
+   * color and fade to `inactiveSegmentOpacity` instead.
+   */
+  inactiveSegmentColor?: string;
+  /**
+   * Opacity of inactive segments when `inactiveSegmentColor` is not set.
+   * @default 0.25
+   */
+  inactiveSegmentOpacity?: number;
 }
 
 /**
@@ -90,6 +127,10 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
   valueLabelColor = '#555555',
   valueLabelPaddingBottom = 4,
   formatValueLabel,
+  inactiveSegmentColor,
+  inactiveSegmentOpacity = 0.25,
+  highlightedLabelColor = '#F5A524',
+  highlightedLabelFont,
 }) => {
   const {
     isLoading,
@@ -109,7 +150,34 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
     scrollX,
     canvasWidth,
     height,
+    selectedSegmentIndex,
+    segmentGap,
+    selectedSeriesKey,
   } = useBarChart();
+
+  // Series highlight animation. `displayedSeriesKey` outlives the selection
+  // while fading out, so the previously highlighted series stays in color
+  // until everything is back to full color.
+  const displayedSeriesKey = useSharedValue<BarChartItemKey | null>(null);
+  const seriesProgress = useSharedValue(0);
+
+  useAnimatedReaction(
+    () => selectedSeriesKey.value,
+    (current, previous) => {
+      if (current === previous) return;
+      const timing = { duration: 220, easing: Easing.out(Easing.cubic) };
+      if (current !== null) {
+        displayedSeriesKey.value = current;
+        seriesProgress.value = withTiming(1, timing);
+      } else {
+        seriesProgress.value = withTiming(0, timing, (finished) => {
+          'worklet';
+          if (finished) displayedSeriesKey.value = null;
+        });
+      }
+    },
+    [selectedSeriesKey]
+  );
 
   // 1. Bars Rendering (Changed from Path to Picture to support individual colors)
   // Calculated on the UI Thread for ALL items at once.
@@ -124,6 +192,11 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
 
     // Parse the default color once
     const defaultColor = Skia.Color(barColor);
+    const inactiveColor = inactiveSegmentColor
+      ? Skia.Color(inactiveSegmentColor)
+      : null;
+    const activeSeriesKey = displayedSeriesKey.value;
+    const highlightProgress = seriesProgress.value;
 
     // MATHEMATICAL CULLING (GPU Optimization)
     const rawStartIndex = Math.floor(scrollX.value / itemFullWidth);
@@ -157,6 +230,57 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
       const rect = Skia.XYWHRect(screenX, currentY, barWidth, currentHeight);
       const rrect = Skia.RRectXY(rect, barBorderRadius, barBorderRadius);
 
+      const segments = item.segments;
+      if (segments && segments.length > 0) {
+        // STACKED: clip to the whole-bar rounded rect so the stack keeps the
+        // same silhouette as a simple bar, then draw plain segment rects.
+        const values: number[] = [];
+        for (let s = 0; s < segments.length; s++) {
+          values.push(segments[s]!.value);
+        }
+        const rects = computeStackSegmentRects(
+          values,
+          graphBottom,
+          currentHeight,
+          segmentGap
+        );
+
+        canvas.save();
+        canvas.clipRRect(rrect, CLIP_INTERSECT, true);
+        for (let s = 0; s < segments.length; s++) {
+          const segRect = rects[s]!;
+          if (segRect.height <= 0) continue;
+          const segment = segments[s]!;
+          const segColor = segment.color ?? item.color;
+          const segBounds = Skia.XYWHRect(
+            screenX,
+            segRect.y,
+            barWidth,
+            segRect.height
+          );
+          const dim = getSegmentDimAmount(
+            getSegmentKey(segment),
+            activeSeriesKey,
+            highlightProgress
+          );
+
+          paint.setColor(segColor ? Skia.Color(segColor) : defaultColor);
+          if (dim > 0 && !inactiveColor) {
+            paint.setAlphaf(1 - (1 - inactiveSegmentOpacity) * dim);
+          }
+          canvas.drawRect(segBounds, paint);
+
+          if (dim > 0 && inactiveColor) {
+            // Cross-fade to the inactive color by painting it on top.
+            paint.setColor(inactiveColor);
+            paint.setAlphaf(dim);
+            canvas.drawRect(segBounds, paint);
+          }
+        }
+        canvas.restore();
+        continue;
+      }
+
       // CORRECTION: Set color per item if available, otherwise use default
       if (item.color) {
         paint.setColor(Skia.Color(item.color));
@@ -164,7 +288,21 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
         paint.setColor(defaultColor);
       }
 
+      // Non-stacked bars belong to no series: dim them while one is active.
+      const barDim = getSegmentDimAmount(
+        null,
+        activeSeriesKey,
+        highlightProgress
+      );
+      if (barDim > 0 && !inactiveColor) {
+        paint.setAlphaf(1 - (1 - inactiveSegmentOpacity) * barDim);
+      }
       canvas.drawRRect(rrect, paint);
+      if (barDim > 0 && inactiveColor) {
+        paint.setColor(inactiveColor);
+        paint.setAlphaf(barDim);
+        canvas.drawRRect(rrect, paint);
+      }
     }
 
     return recorder.finishRecordingAsPicture();
@@ -181,6 +319,11 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
     barBorderRadius,
     barColor, // Added dependency
     height,
+    segmentGap,
+    displayedSeriesKey,
+    seriesProgress,
+    inactiveSegmentColor,
+    inactiveSegmentOpacity,
   ]);
 
   // 2. Selection Border Path (Stroke)
@@ -211,16 +354,46 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
     const currentBarHeight = (item.value / maxValue) * maxBarHeight * eased;
     const y = graphBottom - currentBarHeight;
 
-    path.addRRect(
-      Skia.RRectXY(
-        Skia.XYWHRect(screenX, y, barWidth, currentBarHeight),
-        barBorderRadius,
-        barBorderRadius
-      )
+    const barRRect = Skia.RRectXY(
+      Skia.XYWHRect(screenX, y, barWidth, currentBarHeight),
+      barBorderRadius,
+      barBorderRadius
     );
+
+    // Segment selection: outline only the selected piece, clipped to the
+    // bar silhouette so the top segment keeps the rounded corners.
+    const seg = selectedSegmentIndex.value;
+    const segments = item.segments;
+    if (seg >= 0 && segments && seg < segments.length) {
+      const values: number[] = [];
+      for (let s = 0; s < segments.length; s++) {
+        values.push(segments[s]!.value);
+      }
+      const rects = computeStackSegmentRects(
+        values,
+        graphBottom,
+        currentBarHeight,
+        segmentGap
+      );
+      const segRect = rects[seg]!;
+      if (segRect.height <= 0) return path;
+
+      path.addRect(Skia.XYWHRect(screenX, segRect.y, barWidth, segRect.height));
+      const barPath = Skia.Path.Make();
+      barPath.addRRect(barRRect);
+      return Skia.Path.MakeFromOp(path, barPath, PATH_OP_INTERSECT) ?? path;
+    }
+
+    path.addRRect(barRRect);
     return path;
   }, [
     selectedIndex,
+    selectedSegmentIndex,
+    segmentGap,
+    graphBottom,
+    maxValue,
+    maxBarHeight,
+    canvasWidth,
     scrollX,
     entryProgress,
     data,
@@ -248,7 +421,9 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
 
     const itemFullWidth = barWidth + spacing;
     const paint = Skia.Paint();
-    paint.setColor(Skia.Color(labelColor));
+    const baseLabelColor = Skia.Color(labelColor);
+    const highlightColor = Skia.Color(highlightedLabelColor);
+    const highlightFont = highlightedLabelFont ?? font;
 
     // Same Culling as bars
     const rawStartIndex = Math.floor(scrollX.value / itemFullWidth);
@@ -263,15 +438,19 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
       const worldX = BAR_CHART_PADDING_LEFT + i * itemFullWidth;
       const screenX = worldX - scrollX.value;
 
+      const isHighlighted = item.highlighted === true;
+      const labelFont = isHighlighted ? highlightFont : font;
+      paint.setColor(isHighlighted ? highlightColor : baseLabelColor);
+
       // Truncation
       const maxLabelWidth = barWidth + spacing - 4;
       const text = truncateTextWorklet(
         item.label,
-        font,
+        labelFont,
         Math.max(maxLabelWidth, 10)
       );
 
-      const textWidth = font.getTextWidth(text);
+      const textWidth = labelFont.getTextWidth(text);
       const labelX = screenX + barWidth / 2 - textWidth / 2;
       const labelY = graphBottom + labelPaddingTop + 10;
 
@@ -287,7 +466,7 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
 
       paint.setAlphaf(progress); // Apply opacity to paint
 
-      canvas.drawText(text, labelX, labelY, paint, font);
+      canvas.drawText(text, labelX, labelY, paint, labelFont);
     }
 
     return recorder.finishRecordingAsPicture();
@@ -303,6 +482,8 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
     height,
     canvasWidth,
     labelColor,
+    highlightedLabelColor,
+    highlightedLabelFont,
   ]);
 
   // 4. Value Labels Rendering (Above Bars)
@@ -357,7 +538,7 @@ const BarChartBar: React.FC<BarChartBarPropsInterface> = ({
       // Text formatting
       let text = '';
       if (formatValueLabel) {
-        text = formatValueLabel(item.value);
+        text = formatValueLabel(item.value, item);
       } else {
         text = item.value.toString();
       }

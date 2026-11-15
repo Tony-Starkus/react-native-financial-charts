@@ -10,6 +10,7 @@ import {
 } from 'react-native-reanimated';
 import { useBarChart } from '../BarChartContext';
 import { BAR_CHART_PADDING_LEFT } from '../constants';
+import type { BarChartItemDataInterface } from '../interfaces';
 import {
   Group,
   Path,
@@ -26,12 +27,20 @@ export interface BarChartTooltipPropsInterface {
   font?: SkFont;
   /**
    * Function to format tooltip text.
+   * For stacked bars, `value` is the stack total and `item.segments`
+   * holds the breakdown. `segmentIndex` is the selected segment in
+   * `selectionMode="segment"` (otherwise -1).
    * NOTE: Runs on UI Thread. Use simple methods like .toFixed() or mark as 'worklet'.
    * Avoid .toLocaleString() here as it may crash on Android UI Thread.
    * @default
    * (value, label) => `${label}: ${value}`
    */
-  format?: (value: number, label: string) => string;
+  format?: (
+    value: number,
+    label: string,
+    item: BarChartItemDataInterface,
+    segmentIndex: number
+  ) => string;
 }
 
 const BarChartTooltip: React.FC<BarChartTooltipPropsInterface> = ({
@@ -49,6 +58,7 @@ const BarChartTooltip: React.FC<BarChartTooltipPropsInterface> = ({
     maxValue,
     showXAxis,
     selectedIndex,
+    selectedSegmentIndex,
     verticalScaleFactor,
     graphBottom,
     maxBarHeight,
@@ -69,9 +79,11 @@ const BarChartTooltip: React.FC<BarChartTooltipPropsInterface> = ({
   const font = tooltipFont || globalFont;
 
   // Reacts to changes in the selected index to update position and content
+  // Reads both values so the tooltip also updates when only the selected
+  // segment changes inside the same bar.
   useAnimatedReaction(
-    () => selectedIndex.value,
-    (current) => {
+    () => ({ bar: selectedIndex.value, segment: selectedSegmentIndex.value }),
+    ({ bar: current, segment }) => {
       // If deselected (index -1), hide tooltip
       if (current === -1) {
         opacity.value = withTiming(0);
@@ -81,9 +93,16 @@ const BarChartTooltip: React.FC<BarChartTooltipPropsInterface> = ({
       const item = data[current];
       if (!item) return;
 
+      const selectedSegment =
+        segment >= 0 && item.segments ? item.segments[segment] : undefined;
+
       let displayString = '';
       if (format) {
-        displayString = format(item.value, item.label);
+        displayString = format(item.value, item.label, item, segment);
+      } else if (selectedSegment) {
+        displayString = `${selectedSegment.label ?? item.label}: ${
+          selectedSegment.value
+        }`;
       } else {
         displayString = `${item.label}: ${item.value}`;
       }
@@ -133,6 +152,7 @@ const BarChartTooltip: React.FC<BarChartTooltipPropsInterface> = ({
     },
     [
       selectedIndex,
+      selectedSegmentIndex,
       height,
       barWidth,
       spacing,

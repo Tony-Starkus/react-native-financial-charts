@@ -43,7 +43,7 @@ const PieChartCanvas: React.FC<PieChartCanvasPropsInterface> = ({
     direction,
     sliceGapAngle: rootGap,
     selectedIndex,
-    notifySelection,
+    requestSelection,
   } = pieContext;
 
   // 1) Resolve effective drawing thickness.
@@ -126,8 +126,7 @@ const PieChartCanvas: React.FC<PieChartCanvasPropsInterface> = ({
       const { x, y } = event;
 
       if (!layout.length) {
-        selectedIndex.value = -1;
-        notifySelection(-1);
+        requestSelection(-1);
         return;
       }
 
@@ -161,8 +160,7 @@ const PieChartCanvas: React.FC<PieChartCanvasPropsInterface> = ({
 
       // Toggle selection: tapping selected slice deselects it.
       const nextIndex = selectedIndex.value === foundIndex ? -1 : foundIndex;
-      selectedIndex.value = nextIndex;
-      notifySelection(nextIndex);
+      requestSelection(nextIndex);
     });
 
   return (

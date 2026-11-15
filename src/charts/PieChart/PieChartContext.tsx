@@ -14,6 +14,7 @@ import type {
 } from './interfaces';
 import { useSharedValue } from 'react-native-reanimated';
 import { StyleSheet, View } from 'react-native';
+import { findPieSliceIndexByKey, getPieSelectionSignature } from './selection';
 
 export const PieChartContext = createContext<
   PieChartContextInterface | undefined
@@ -50,9 +51,12 @@ const PieChartProvider: React.FC<
   othersLabel = 'Others',
   othersColor = '#A3A3A3',
   othersVisualAngle,
+  selectedKey,
   ref,
   children,
 }) => {
+  const isControlled = selectedKey !== undefined;
+
   // Core geometry for the chart. All drawing and hit-tests are based on this.
   // Keep the same ratio behavior across devices by deriving radii from `size`.
   const radius = (size / 2) * 0.85;
@@ -69,6 +73,8 @@ const PieChartProvider: React.FC<
         ...item,
         // Color is optional in the public API. Generate one when missing.
         color: item.color ?? buildFallbackColor(item, index),
+        // Keep a pointer to the original position for app-side lookups.
+        sourceIndex: index,
       }))
       .filter((item) => item.value > 0)
       .sort((a, b) => b.value - a.value);
@@ -262,6 +268,17 @@ const PieChartProvider: React.FC<
     [onSelect, onSelectAggregated, processedData]
   );
 
+  // Single entry point for tap and imperative selection.
+  // In controlled mode the parent owns the state: we only notify and wait
+  // for `selectedKey` to change.
+  const requestSelection = useCallback(
+    (index: number) => {
+      if (!isControlled) selectedIndex.value = index;
+      notifySelection(index);
+    },
+    [isControlled, notifySelection, selectedIndex]
+  );
+
   // Expose imperative controls (React 19 style: `ref` as prop).
   // This mirrors the BarChart API style used in this project.
   useImperativeHandle(
@@ -269,21 +286,38 @@ const PieChartProvider: React.FC<
     () => ({
       selectedIndex: (index: number) => {
         if (index < -1 || index >= processedData.length) return;
-        selectedIndex.value = index;
-        notifySelection(index);
+        requestSelection(index);
+      },
+      selectByKey: (key) => {
+        requestSelection(findPieSliceIndexByKey(processedData, key));
       },
       clearSelection: () => {
-        selectedIndex.value = -1;
-        notifySelection(-1);
+        requestSelection(-1);
       },
     }),
-    [notifySelection, processedData, selectedIndex]
+    [requestSelection, processedData]
   );
 
-  // Reset selection when visible data changes to avoid stale indices.
+  // Content signature: parent re-renders that recreate `data` with the same
+  // content (e.g. inline arrays) must not wipe the current selection.
+  const selectionSignature = useMemo(
+    () => getPieSelectionSignature(processedData),
+    [processedData]
+  );
+
+  // Uncontrolled: reset selection only when the visible slices really change,
+  // to avoid stale indices.
   useEffect(() => {
+    if (isControlled) return;
     selectedIndex.value = -1;
-  }, [processedData, selectedIndex]);
+  }, [selectionSignature, isControlled, selectedIndex]);
+
+  // Controlled: mirror `selectedKey` into the shared value. Idempotent, so
+  // re-running on data identity changes is harmless.
+  useEffect(() => {
+    if (!isControlled) return;
+    selectedIndex.value = findPieSliceIndexByKey(processedData, selectedKey);
+  }, [isControlled, selectedKey, processedData, selectedIndex]);
 
   return (
     <PieChartContext.Provider
@@ -300,6 +334,7 @@ const PieChartProvider: React.FC<
         sliceGapAngle,
         selectedIndex,
         notifySelection,
+        requestSelection,
       }}
     >
       <View style={[styles.container, { width: size, height: size }]}>

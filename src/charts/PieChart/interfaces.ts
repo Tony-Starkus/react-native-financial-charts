@@ -1,10 +1,18 @@
 import type { SharedValue } from 'react-native-reanimated';
 
+/** Key used to select a slice from outside the chart (`id`, or `label` as fallback). */
+export type PieChartItemKey = string | number;
+
 /**
  * @interface PieChartItem
  * Defines the data structure for an individual slice in the chart.
  */
 export interface PieChartItem {
+  /**
+   * Optional stable identifier used for external selection
+   * (`selectedKey` / `ref.selectByKey`). Falls back to `label` when omitted.
+   */
+  id?: PieChartItemKey;
   /** Optional descriptive label for the category */
   label?: string;
   /** Numerical value determining the slice's proportional size */
@@ -20,6 +28,11 @@ export interface PieChartItem {
    * If omitted, `value` is used.
    */
   renderValue?: number;
+  /**
+   * Internal: index of this item in the original `data` prop.
+   * Filled by the chart; undefined for the aggregated slice.
+   */
+  sourceIndex?: number;
 }
 
 export interface PieChartRootPropsInterface {
@@ -78,6 +91,17 @@ export interface PieChartRootPropsInterface {
    * This is a visual preference only; `value` remains the real total.
    */
   othersVisualAngle?: number;
+  /**
+   * Controlled selection by key (`item.id`, or `item.label` as fallback).
+   * - `undefined`: uncontrolled (default; tap / ref drive selection).
+   * - `null`: controlled, nothing selected.
+   * - key: controlled, selects the matching slice. Keys merged into the
+   *   aggregated slice select the "Others" slice.
+   *
+   * In controlled mode, taps only fire `onSelect`; update `selectedKey`
+   * from it to move the selection. Prop changes do not fire `onSelect`.
+   */
+  selectedKey?: PieChartItemKey | null;
 }
 
 export type PieChartRef = {
@@ -85,6 +109,12 @@ export type PieChartRef = {
    * Programmatically selects a slice by index (-1 to deselect).
    */
   selectedIndex: (index: number) => void;
+  /**
+   * Programmatically selects a slice by key (`item.id`, or `item.label` as
+   * fallback). Keys merged into "Others" select the aggregated slice.
+   * Pass `null` to clear. Fires `onSelect` like a tap.
+   */
+  selectByKey: (key: PieChartItemKey | null) => void;
   /**
    * Clears current selection.
    */
@@ -115,6 +145,12 @@ export interface PieChartContextInterface {
   direction: 'clockwise' | 'counterclockwise';
   sliceGapAngle: number;
   notifySelection: (index: number) => void;
+  /**
+   * Single entry point for user-driven selection (tap / ref).
+   * Uncontrolled: updates `selectedIndex` and notifies.
+   * Controlled (`selectedKey` defined): only notifies.
+   */
+  requestSelection: (index: number) => void;
 }
 
 // Backward-compatible alias

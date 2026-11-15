@@ -1,6 +1,8 @@
 import React from 'react';
 import { BarChartContext, useBarChart } from '../BarChartContext';
 import { BAR_CHART_PADDING_LEFT } from '../constants';
+import { hitTestStackSegment, hitTestStackSeriesKey } from '../utils';
+import type { BarChartItemKey } from '../interfaces';
 import { StyleSheet, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { Canvas } from '@shopify/react-native-skia';
@@ -25,23 +27,30 @@ const BarChartCanvas: React.FC<{
     selectedIndex,
     selectable,
     graphBottom,
-    onBarPress,
+    isControlled,
+    notifySelection,
+    selectedSegmentIndex,
+    selectionMode,
+    segmentGap,
+    maxValue,
+    maxBarHeight,
+    selectedSeriesKey,
+    isSeriesControlled,
+    notifySeriesSelection,
   } = barChartContext;
+
+  const isSegmentMode = selectionMode === 'segment';
+  const isSeriesMode = selectionMode === 'series';
+
+  const handleSeriesJsCallback = (key: BarChartItemKey | null) => {
+    notifySeriesSelection(key);
+  };
 
   /**
    * Wrapper to call the external Javascript callback from the UI Thread.
    */
-  const handleJsCallback = (index: number) => {
-    if (!onBarPress) return;
-
-    if (index === -1) {
-      onBarPress(null, -1);
-    }
-
-    if (index >= 0 && index < data.length) {
-      const item = data[index]!;
-      onBarPress(item, index);
-    }
+  const handleJsCallback = (index: number, segmentIndex: number) => {
+    notifySelection(index, segmentIndex);
   };
 
   /**
@@ -68,28 +77,66 @@ const BarChartCanvas: React.FC<{
       const isInsideBarWidth =
         positionInSlot >= 0 && positionInSlot <= barWidth;
 
-      // Validate index bounds
+      // SERIES MODE: tap resolves the series of the tapped segment and
+      // toggles it; tapping anything else clears.
+      if (isSeriesMode) {
+        let nextKey: BarChartItemKey | null = null;
+        if (
+          index >= 0 &&
+          index < data.length &&
+          isInsideBarWidth &&
+          locationY <= graphBottom &&
+          locationY >= 0
+        ) {
+          const tappedKey = hitTestStackSeriesKey(
+            data[index]!,
+            locationY,
+            maxValue,
+            maxBarHeight,
+            graphBottom,
+            segmentGap
+          );
+          nextKey = tappedKey === selectedSeriesKey.value ? null : tappedKey;
+        }
+        if (!isSeriesControlled) selectedSeriesKey.value = nextKey;
+        runOnJS(handleSeriesJsCallback)(nextKey);
+        return;
+      }
+
+      // Resolve next selection:
+      // - tap on a bar (or segment, in segment mode) toggles it
+      // - tap on spacing / padding / outside graph area clears
+      let nextIndex = -1;
+      let nextSegment = -1;
       if (index >= 0 && index < data.length) {
         const isInsideGraphArea = locationY <= graphBottom && locationY >= 0;
-
         if (isInsideBarWidth && isInsideGraphArea) {
-          if (selectedIndex.value === index) {
-            selectedIndex.value = -1;
-            runOnJS(handleJsCallback)(-1);
-          } else {
-            selectedIndex.value = index;
-            runOnJS(handleJsCallback)(index);
+          const tappedSegment = isSegmentMode
+            ? hitTestStackSegment(
+                data[index]!,
+                locationY,
+                maxValue,
+                maxBarHeight,
+                graphBottom,
+                segmentGap
+              )
+            : -1;
+          const isSameTarget =
+            selectedIndex.value === index &&
+            selectedSegmentIndex.value === tappedSegment;
+          if (!isSameTarget) {
+            nextIndex = index;
+            nextSegment = tappedSegment;
           }
-        } else {
-          // Clicked in spacing
-          selectedIndex.value = -1;
-          runOnJS(handleJsCallback)(-1);
         }
-      } else {
-        // Clicked outside bounds (e.g. padding area)
-        selectedIndex.value = -1;
-        runOnJS(handleJsCallback)(-1);
       }
+
+      // Controlled mode: parent owns the state, only notify.
+      if (!isControlled) {
+        selectedIndex.value = nextIndex;
+        selectedSegmentIndex.value = nextSegment;
+      }
+      runOnJS(handleJsCallback)(nextIndex, nextSegment);
     });
 
   const dynamicContainerStyle = useAnimatedStyle(() => {

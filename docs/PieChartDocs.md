@@ -311,6 +311,53 @@ const chartRef = useRef<PieChartRef>(null);
 
 ![Pie Chart Sample 10](../docs/assets/piechart/10.gif)
 
+### 11. Controlled Selection from a Table / Legend
+
+Drive the selected slice from outside the chart with `selectedKey`. The key is `item.id` (or `item.label` when `id` is missing), so the table can use the original data, regardless of sorting or aggregation. Items merged into "Others" select the aggregated slice.
+
+```tsx
+import React, { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { PieChart } from 'react-native-financial-charts';
+import type { PieChartItem, PieChartItemKey } from 'react-native-financial-charts';
+
+const data: PieChartItem[] = [
+  { id: 'btc', label: 'Bitcoin', value: 5200, color: '#F7931A' },
+  { id: 'eth', label: 'Ethereum', value: 2100, color: '#6E7CF5' },
+  { id: 'sol', label: 'Solana', value: 900, color: '#2BB58A' },
+];
+
+export function PortfolioDonut() {
+  const [selectedKey, setSelectedKey] = useState<PieChartItemKey | null>(null);
+
+  return (
+    <View>
+      <PieChart.Root
+        data={data}
+        selectedKey={selectedKey}
+        // Taps only notify in controlled mode: mirror them into state.
+        onSelect={(item) => setSelectedKey(item ? (item.id ?? item.label ?? null) : null)}
+      >
+        <PieChart.Canvas selectable>
+          <PieChart.Slices rounded />
+        </PieChart.Canvas>
+      </PieChart.Root>
+
+      {data.map((item) => (
+        <Pressable
+          key={item.id}
+          onPress={() => setSelectedKey((k) => (k === item.id ? null : item.id!))}
+        >
+          <Text>{item.label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+```
+
+Prefer the imperative API? `chartRef.current?.selectByKey('eth')` does the same in uncontrolled mode and fires `onSelect` like a tap.
+
 ## 🔷 TypeScript Support
 
 For advanced usage, you can import the following types from `react-native-financial-charts`:
@@ -321,6 +368,7 @@ Complete interface reference:
 ### Core Types
 
 - [`PieChartItem`](./interfaces/PieChartInterfaces.md#piechartitem)
+- [`PieChartItemKey`](./interfaces/PieChartInterfaces.md#piechartitemkey)
 - [`PieChartRef`](./interfaces/PieChartInterfaces.md#piechartref)
 - [`PieChartRootPropsInterface`](./interfaces/PieChartInterfaces.md#piechartrootpropsinterface)
 
@@ -357,12 +405,14 @@ Provider component responsible for data processing, aggregation, and imperative 
 | `othersLabel`        | `string`                                                                    | `'Others'`         | Label for aggregated slice.                                  |
 | `othersColor`        | `string`                                                                    | `'#A3A3A3'`        | Color for aggregated slice.                                  |
 | `othersVisualAngle`  | `number`                                                                    | `auto`             | Optional visual angle override for "Others".                 |
+| `selectedKey`        | `string \| number \| null`                                                  | `undefined`        | Controlled selection by key (`id`, fallback `label`). `undefined` = uncontrolled, `null` = nothing selected. |
 | `onSelect`           | (item: [PieChartItem](./interfaces/PieChartInterfaces.md#piechartitem) \| null, index: number) => void                       | `undefined`        | Called on selection/deselection.                             |
 | `onSelectAggregated` | (item: [PieChartItem](./interfaces/PieChartInterfaces.md#piechartitem), index: number, groupedItems: [PieChartItem](./interfaces/PieChartInterfaces.md#piechartitem)[]) => void | `undefined`        | Called when aggregated slice is selected.                    |
 
 Notes:
 - Selection callbacks are triggered by user interaction only when `PieChart.Canvas` uses `selectable={true}`.
 - You can also trigger the same callbacks programmatically via `PieChartRef` methods.
+- Controlled mode (`selectedKey !== undefined`): taps and ref calls only fire `onSelect`; the visual selection follows `selectedKey`. Changing `selectedKey` does not fire `onSelect`.
 
 ### `PieChartRef` (Imperative API)
 
@@ -385,6 +435,7 @@ const chartRef = useRef<PieChartRef>(null);
 | Method           | Type                      | Description                                                   |
 | ---------------- | ------------------------- | ------------------------------------------------------------- |
 | `selectedIndex`  | `(index: number) => void` | Selects a slice by index (`-1` clears selection).             |
+| `selectByKey`    | `(key: string \| number \| null) => void` | Selects a slice by key (`id`, fallback `label`). Grouped keys select "Others". `null` clears. |
 | `clearSelection` | `() => void`              | Clears current selection (equivalent to `selectedIndex(-1)`). |
 
 #### Method behavior notes
@@ -392,7 +443,8 @@ const chartRef = useRef<PieChartRef>(null);
 - `selectedIndex(index)` accepts values from `-1` to `data.length - 1` (after aggregation processing).
 - Invalid indices are ignored (no selection update).
 - `selectedIndex(-1)` and `clearSelection()` both trigger deselection callbacks.
-- If data changes, current selection is automatically reset to avoid stale indices.
+- If the rendered slices change (content, not just array identity), uncontrolled selection is reset to avoid stale indices. Controlled selection is re-resolved from `selectedKey`.
+- `selectByKey` with an unknown key deselects.
 
 ---
 

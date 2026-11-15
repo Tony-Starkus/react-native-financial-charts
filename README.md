@@ -259,6 +259,38 @@ const App = () => {
 };
 ```
 
+### 5. Gauge Chart
+
+Animated gauge for single-value KPIs (risk score, budget usage, allocation targets) with segments, needle, ticks and an animated value label.
+
+[Read the full GaugeChart Documentation](./docs/GaugeChartDocs.md) (Includes angles, segments, semicircle layout and API Reference)
+
+```tsx
+import { GaugeChart } from 'react-native-financial-charts';
+import type { GaugeSegment } from 'react-native-financial-charts';
+
+const segments: GaugeSegment[] = [
+  { from: 0, to: 30, color: '#22C55E' },
+  { from: 30, to: 70, color: '#F59E0B' },
+  { from: 70, to: 100, color: '#EF4444' },
+];
+
+const App = () => (
+  <GaugeChart.Root value={58} segments={segments} width={320}>
+    <GaugeChart.Canvas>
+      <GaugeChart.Segments gapAngle={3} />
+      <GaugeChart.Ticks showLabels />
+      <GaugeChart.Needle colorBySegment />
+    </GaugeChart.Canvas>
+    <GaugeChart.Value />
+  </GaugeChart.Root>
+);
+```
+
+## ⬆️ Upgrading
+
+Upgrading from 2.x? See the breaking changes and migration steps in [`CHANGELOG.md`](./CHANGELOG.md).
+
 ## 🐛 Troubleshooting
 
 **Error: `missing libsvg.a` or `skia` crash**
