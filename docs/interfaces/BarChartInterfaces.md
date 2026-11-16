@@ -147,4 +147,4 @@ import type {
 | `labelBackgroundColor` | `string` | No | Label background color. |
 | `labelBorderRadius` | `number` | No | Label background radius. |
 | `labelPadding` | `number` | No | Label background padding. |
-| `formatLabel` | `(value: number) => string` | No | Numeric label formatter. |
+| `formatLabel` | `(value: number) => string` | No | Numeric label formatter. Return `''` to hide a tick (and its pill). |

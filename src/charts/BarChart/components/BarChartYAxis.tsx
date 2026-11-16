@@ -45,7 +45,8 @@ export interface BarChartYAXisPropsInterface {
   labelPadding?: number;
 
   /**
-   *  Function to format the numeric value.
+   *  Function to format the numeric value. Return `''` to hide a tick
+   *  (e.g. the zero line), including its background pill.
    *  1. undefined: Uses the user's system locale (e.g., comma in BR, dot in US).
    * 2. maximumFractionDigits: 6: Shows up to 6 decimal places for small numbers (0.00006), but does not force extra zeros on integers (100 remains 100).
    */
@@ -80,6 +81,8 @@ const BarChartYAxis: React.FC<BarChartYAXisPropsInterface> = ({
         const textY = y + labelYOffset;
 
         const labelText = formatLabel(tick);
+        // An empty label hides the tick (no text and no background pill).
+        if (labelText === '') return null;
 
         const shouldDrawTextBg = labelBackgroundColor !== 'transparent';
         let bgRect = null;
