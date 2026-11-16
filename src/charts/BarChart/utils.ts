@@ -100,6 +100,27 @@ export const normalizeBarData = (
       : item
   );
 
+/**
+ * Signature of everything that defines the bars' geometry: count, values and
+ * stacked segment values. Colors, labels, ids and `highlighted` are left out,
+ * so recoloring bars (e.g. dimming unselected ones) does not replay the entry
+ * animation. Expects data already passed through `normalizeBarData`.
+ */
+export const getBarGeometrySignature = (
+  data: BarChartItemDataInterface[]
+): string => {
+  let signature = String(data.length);
+  for (const item of data) {
+    signature += `|${item.value}`;
+    if (isStackedItem(item)) {
+      for (const segment of item.segments!) {
+        signature += `,${safeMagnitude(segment.value)}`;
+      }
+    }
+  }
+  return signature;
+};
+
 export type BarStackSegmentRect = {
   /** Top Y coordinate of the segment. */
   y: number;

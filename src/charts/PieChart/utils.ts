@@ -43,13 +43,13 @@ const hashNumber = (value: number, seed: number) => {
   return hashString(Math.round(value * 1000).toString(36), seed);
 };
 
-const hashPieData = (data: PieChartItem[]) => {
+const hashPieData = (data: PieChartItem[], includeColor: boolean) => {
   // Hash only fields that influence visual layout.
   let hash = 2166136261 % HASH_MOD;
   for (let i = 0; i < data.length; i++) {
     const item = data[i]!;
     hash = hashString(item.label ?? '', hash);
-    hash = hashString(item.color ?? '', hash);
+    if (includeColor) hash = hashString(item.color ?? '', hash);
     hash = hashNumber(item.value, hash);
     hash = hashNumber(item.renderValue ?? -1, hash);
     hash = hashNumber(item.isAggregated ? 1 : 0, hash);
@@ -57,19 +57,19 @@ const hashPieData = (data: PieChartItem[]) => {
   return hash;
 };
 
-export const getPieLayoutSignature = ({
-  data,
-  innerRadius,
-  outerRadius,
-  sliceGapAngle,
-  cornerRadius,
-  startAngle,
-  direction,
-}: Omit<BuildPieLayoutProps, 'layoutSignature'>) => {
-  // Merge data + geometry into a compact signature consumed by:
-  // - local memoization
-  // - shared LRU cache lookup
-  let hash = hashPieData(data);
+const hashPieGeometry = (
+  {
+    data,
+    innerRadius,
+    outerRadius,
+    sliceGapAngle,
+    cornerRadius,
+    startAngle,
+    direction,
+  }: Omit<BuildPieLayoutProps, 'layoutSignature'>,
+  includeColor: boolean
+) => {
+  let hash = hashPieData(data, includeColor);
   hash = hashNumber(innerRadius, hash);
   hash = hashNumber(outerRadius, hash);
   hash = hashNumber(sliceGapAngle, hash);
@@ -78,6 +78,23 @@ export const getPieLayoutSignature = ({
   hash = hashString(direction, hash);
   return hash.toString(36);
 };
+
+/**
+ * Signature of data + geometry, consumed by:
+ * - local memoization
+ * - shared LRU cache lookup (the cached layout carries each slice's color)
+ */
+export const getPieLayoutSignature = (
+  props: Omit<BuildPieLayoutProps, 'layoutSignature'>
+) => hashPieGeometry(props, true);
+
+/**
+ * Same as `getPieLayoutSignature`, but ignoring colors: recoloring slices
+ * (e.g. dimming the unselected ones) must not replay the entry animation.
+ */
+export const getPieRevealSignature = (
+  props: Omit<BuildPieLayoutProps, 'layoutSignature'>
+) => hashPieGeometry(props, false);
 
 export const buildPieLayout = ({
   data,

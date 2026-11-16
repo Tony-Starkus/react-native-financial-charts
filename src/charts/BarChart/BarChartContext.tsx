@@ -28,6 +28,7 @@ import {
   calculateNiceScale,
   findBarIndexByKey,
   findSegmentIndexByKey,
+  getBarGeometrySignature,
   getCenteredScrollOffset,
   normalizeBarData,
 } from './utils';
@@ -165,6 +166,13 @@ const BarChartProvider: React.FC<
   const scrollViewRef = useAnimatedRef<any>();
   const scrollX = useScrollViewOffset(scrollViewRef);
 
+  // Replays the entry animation (and the initial scroll) only when the bars'
+  // geometry changes, not on recolors or label changes.
+  const geometrySignature = useMemo(
+    () => getBarGeometrySignature(data),
+    [data]
+  );
+
   useEffect(() => {
     if (!isLoading) {
       entryProgress.value = 0;
@@ -186,7 +194,7 @@ const BarChartProvider: React.FC<
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, isLoading, scrollToTheEnd, isScrollable]);
+  }, [geometrySignature, isLoading, scrollToTheEnd, isScrollable]);
 
   // 3. Layout Calculations
   const xAxisHeight = showXAxis ? LABEL_PADDING_TOP + APPROX_FONT_HEIGHT : 0;

@@ -1,5 +1,6 @@
 import {
   computeStackSegmentRects,
+  getBarGeometrySignature,
   getSegmentsTotal,
   isStackedItem,
   normalizeBarData,
@@ -69,5 +70,57 @@ describe('BarChart stacked utils', () => {
       { y: 50, height: 0 },
       { y: 50, height: 0 },
     ]);
+  });
+});
+
+describe('BarChart geometry signature', () => {
+  const base = normalizeBarData([
+    {
+      id: 'jan',
+      label: 'jan',
+      value: 0,
+      segments: [{ value: 3 }, { value: 4 }],
+    },
+    { id: 'feb', label: 'feb', value: 5 },
+  ]);
+
+  it('ignores colors, labels, ids and highlighted', () => {
+    const recolored = normalizeBarData([
+      {
+        id: 'x',
+        label: 'other',
+        value: 0,
+        highlighted: true,
+        segments: [
+          { value: 3, color: '#111111' },
+          { value: 4, color: '#222222' },
+        ],
+      },
+      { id: 'y', label: 'label', value: 5, color: '#333333' },
+    ]);
+    expect(getBarGeometrySignature(recolored)).toBe(
+      getBarGeometrySignature(base)
+    );
+  });
+
+  it('changes when a value, a segment value or the bar count changes', () => {
+    const signature = getBarGeometrySignature(base);
+    expect(
+      getBarGeometrySignature(
+        normalizeBarData([
+          { label: 'jan', value: 0, segments: [{ value: 4 }, { value: 3 }] },
+          { label: 'feb', value: 5 },
+        ])
+      )
+    ).not.toBe(signature);
+    expect(
+      getBarGeometrySignature(
+        normalizeBarData([
+          { label: 'jan', value: 0, segments: [{ value: 3 }, { value: 4 }] },
+          { label: 'feb', value: 6 },
+        ])
+      )
+    ).not.toBe(signature);
+    expect(getBarGeometrySignature(base.slice(0, 1))).not.toBe(signature);
   });
 });

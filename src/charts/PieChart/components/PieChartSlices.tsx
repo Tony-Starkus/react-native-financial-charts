@@ -8,7 +8,11 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import { usePieChart } from '../PieChartContext';
-import { buildPieLayout, getPieLayoutSignature } from '../utils';
+import {
+  buildPieLayout,
+  getPieLayoutSignature,
+  getPieRevealSignature,
+} from '../utils';
 import { useOptionalPieChartLayout } from '../PieChartLayoutContext';
 
 export interface PieChartSlicesPropsInterface {
@@ -119,13 +123,31 @@ export const PieChartSlices: React.FC<PieChartSlicesPropsInterface> = ({
     layoutSignature,
   ]);
 
-  // 4) Animation key:
-  // - uses shared Canvas signature when layout is reused
-  // - otherwise uses local signature
-  // This prevents replaying entry animation on unrelated parent rerenders.
-  const animationKey = shouldUseLayoutFromCanvas
-    ? layoutContext.layoutSignature
-    : layoutSignature;
+  // 4) Animation key: geometry without colors (it matches the Canvas layout
+  // when that one is reused, since the effective geometry is the same).
+  // This prevents replaying the entry animation on unrelated parent
+  // rerenders and on recolors (e.g. dimming unselected slices).
+  const animationKey = useMemo(
+    () =>
+      getPieRevealSignature({
+        data,
+        innerRadius: effectiveInnerRadius,
+        outerRadius: radius,
+        sliceGapAngle: effectiveGap,
+        cornerRadius,
+        startAngle,
+        direction,
+      }),
+    [
+      data,
+      effectiveInnerRadius,
+      radius,
+      effectiveGap,
+      cornerRadius,
+      startAngle,
+      direction,
+    ]
+  );
 
   const effectiveSelectedSliceOffset =
     selectedSliceOffset ?? layoutContext?.selectedSliceOffset ?? 12;
