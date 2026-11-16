@@ -495,7 +495,7 @@ The provider component that manages state, layout, and gestures.
 | Prop                  | Type                                                               | Default       | Description                                                                                |
 | --------------------- | ------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------ |
 | `ref`                 | React.Ref<[BarChartRef](./interfaces/BarChartInterfaces.md#barchartref)>                                           | `undefined`   | Bar chart component ref.                                                                   |
-| `data`                | [`BarChartItemDataInterface`](./interfaces/BarChartInterfaces.md#barchartitemdatainterface)[]                                       | **Required**  | Array of data points.                                                                      |
+| `data`                | [`BarChartItemDataInterface`](./interfaces/BarChartInterfaces.md#barchartitemdatainterface)[]                                       | **Required**  | Array of data points. The entry animation replays only when bar count or values change, not on recolors. |
 | `height`              | `number`                                                           | `300`         | Total height of the chart container.                                                       |
 | `width`               | `number`                                                           | `300`         | Total width of the chart container.                                                        |
 | `scrollToTheEnd`      | `boolean`                                                          | `false`       | If true, automatically scrolls to the end of the list on load.                             |
@@ -632,4 +632,4 @@ Renders the vertical axis labels on the left side.
 | `labelBackgroundColor` | `string`                    | `transparent`                            | Background color for text labels (pill effect).                            |
 | `labelBorderRadius`    | `number`                    | `4`                                      | Border radius for label background.                                         |
 | `labelPadding`         | `number`                    | `2`                                      | Internal padding for label background.                                      |
-| `formatLabel`          | `(value: number) => string` | `system locale (max 6 fractional digits)` | Function to format numeric values.                                          |
+| `formatLabel`          | `(value: number) => string` | `system locale (max 6 fractional digits)` | Function to format numeric values. Return `''` to hide a tick (and its pill). |

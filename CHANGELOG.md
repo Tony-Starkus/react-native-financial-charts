@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.1.0 (2026-11-16)
+
+### ✨ Added
+
+- **BarChart:** returning `''` from `<BarChart.YAxis formatLabel />` now hides that tick, including its background pill (e.g. to hide the zero line label).
+
+### 🐛 Fixed
+
+- **BarChart:** recoloring bars (changing `color`, `label`, `id` or `highlighted`, e.g. dimming unselected bars) no longer replays the entry animation or the initial scroll. It replays only when the bar count, values or segment values change.
+- **PieChart:** recoloring slices (e.g. dimming the unselected ones) no longer replays the entry animation.
+
+### 📝 Docs
+
+- Added a GaugeChart preview image to the README and `GaugeChartDocs.md`.
+
 ## 3.0.0 (2026-11-15)
 
 ### ⚠️ Breaking Changes

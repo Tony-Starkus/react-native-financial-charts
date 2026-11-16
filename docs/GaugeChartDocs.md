@@ -1,5 +1,9 @@
 # 📈 React Native Financial Charts - Gauge Chart
 
+<p align="center">
+  <img src="../docs/assets/gaugechart/0.png" alt="Gauge Chart" />
+</p>
+
 The GaugeChart renders a single value on an arc, built for KPIs such as risk scores, portfolio allocation targets, credit scores or budget usage.
 It supports a background track, colored segments, an animated progress arc, an animated needle, ticks with labels, and an animated value label. Everything animates on the UI thread with Reanimated.
 

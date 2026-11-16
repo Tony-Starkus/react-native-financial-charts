@@ -265,6 +265,8 @@ Animated gauge for single-value KPIs (risk score, budget usage, allocation targe
 
 [Read the full GaugeChart Documentation](./docs/GaugeChartDocs.md) (Includes angles, segments, semicircle layout and API Reference)
 
+<img src="./docs/assets/gaugechart/0.png" alt="Gauge Chart" />
+
 ```tsx
 import { GaugeChart } from 'react-native-financial-charts';
 import type { GaugeSegment } from 'react-native-financial-charts';
